@@ -6,6 +6,6 @@ import react from '@astrojs/react';
 export default defineConfig({
   integrations: [react()],
   output: 'static',
-  // TODO: Replace with the real production URL before deploying.
-  site: 'https://marwa-attef.example.com',
+  site: 'https://marwaattefsaleh.github.io',
+  base: '/portfolio/',
 });
