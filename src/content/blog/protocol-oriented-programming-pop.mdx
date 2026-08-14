@@ -1,0 +1,200 @@
+---
+title: "Protocol-Oriented Programming (POP)"
+description: "Protocol-Oriented Programming (POP) is a core Swift paradigm introduced by Apple at WWDC 2015."
+pubDate: 2026-08-14
+tags: ["Swift","POP","OOP"]
+emoji: "📐"
+---
+
+Protocol-Oriented Programming (POP) is a core Swift paradigm introduced by Apple at WWDC 2015.
+It focuses on using protocols, protocol extensions, and value types (like structs and enums) to build flexible, reusable, and decoupled code.
+
+Swift encourages POP over traditional OOP (Object-Oriented Programming) because it avoids class inheritance complexity and promotes composition.
+
+#### 🧠 Key Idea
+Instead of creating hierarchies of classes, you define protocols that describe behavior — and then make types (structs, enums, or classes) conform to them.
+
+# 🧱 Core Concepts of POP
+## 1. Protocols
+A protocol defines a blueprint of methods, properties, and requirements.
+
+```
+protocol Drivable {
+    var speed: Int { get set }
+    func drive()
+}
+```
+
+
+Any type can adopt this protocol:
+
+```
+struct Car: Drivable {
+    var speed: Int = 0
+    
+    func drive() {
+        print("Driving at \(speed) km/h")
+    }
+}
+```
+
+
+- ✅ Protocols define what something can do — not how it does it.
+## 2. Protocol Extensions
+Protocols can be extended to provide default implementations, allowing shared behavior across multiple conforming types.
+
+```
+extension Drivable {
+    func drive() {
+        print("Default driving implementation")
+    }
+}
+```
+
+
+Now, any type that conforms to Drivable but doesn’t implement drive() will use this default behavior.
+
+## 3. Protocol Inheritance
+Protocols can inherit from other protocols — allowing modular and reusable designs.
+
+```
+protocol Electric {
+    func charge()
+}
+
+protocol ElectricCar: Drivable, Electric { }
+```
+
+
+A type can then conform to both sets of behavior:
+
+```
+struct Tesla: ElectricCar {
+    var speed: Int = 100
+    func charge() {
+        print("Charging battery...")
+    }
+}
+```
+
+
+## 4. Value Types (Structs) over Classes
+POP encourages using structs instead of classes.
+**Why?**
+- Structs are value types (copied by value).
+- Classes are reference types (copied by reference).
+
+```
+struct Vehicle: Drivable {
+    var speed: Int
+    func drive() {
+        print("Struct vehicle driving at \(speed) km/h")
+    }
+}
+```
+
+
+- ✅ Each struct instance is independent — avoiding side effects from shared state.
+
+## 5. Protocol Composition
+You can combine multiple protocols into one type requirement using &.
+
+```
+protocol Flyable { func fly() }
+protocol Floatable { func float() }
+
+func performAction(on object: Flyable & Floatable) {
+    object.fly()
+    object.float()
+}
+```
+
+
+- ✅ Allows flexible composition instead of deep inheritance chains.
+
+# 🔁 Example: POP vs OOP
+- 🧱 OOP Example
+
+```
+class Animal {
+    func makeSound() { }
+}
+
+class Dog: Animal {
+    override func makeSound() {
+        print("Woof!")
+    }
+}
+```
+
+
+- 🧩 POP Example
+
+```
+protocol SoundMaking {
+    func makeSound()
+}
+
+extension SoundMaking {
+    func makeSound() {
+        print("Default sound")
+    }
+}
+
+struct Dog: SoundMaking {
+    func makeSound() {
+        print("Woof!")
+    }
+}
+
+struct Cat: SoundMaking {
+    func makeSound() {
+        print("Meow!")
+    }
+}
+```
+
+
+- ✅ In POP:
+  - No inheritance hierarchy.
+  - Structs conform to shared protocols.
+  - Behavior is shared via protocol extensions.
+
+# ⚙️ POP and Protocol Extensions in the Swift Standard Library
+Swift’s standard library is built around POP.
+
+- Examples:
+Equatable, Comparable, Hashable, Codable — all are protocols.
+Collections like Array, Dictionary, and Set use protocol conformance to share behavior.
+
+```
+let numbers = [1, 2, 3]
+print(numbers.count) // Provided by a protocol extension
+```
+
+
+- ✅ Collection protocol defines .count, .first, .map, etc.
+- ✅ Each collection type (Array, Set, Dictionary) adopts that behavior.
+
+# ⚖️ POP vs OOP
+![Screenshot 2025-11-12 at 10 37 41 AM](https://github.com/user-attachments/assets/c1bd9be6-0b05-4705-bcb5-6834a1906005)
+
+# 🧠 Advantages of POP
+- ✅ Promotes code reuse via protocol extensions.
+- ✅ Encourages composition over inheritance.
+- ✅ Works well with value types → safer and thread-friendly.
+- ✅ Reduces tight coupling between components.
+- ✅ Easy to mock and test in unit testing.
+
+# ⚠️ Limitations
+- ⚡ Protocol extensions cannot store state (only behavior).
+- ⚡ Default implementations can lead to confusion if overused.
+- ⚡ Runtime polymorphism is limited (no stored properties).
+- ⚡ Requires careful design to avoid overlapping responsibilities.
+
+# 🧭 Best Practices
+- ✅ Prefer composition (protocol conformance) instead of inheritance.
+- ✅ Keep protocols focused and single-purpose (SRP).
+- ✅ Use protocol extensions for shared default behaviors.
+- ✅ Combine OOP + POP — classes can still conform to protocols.
+- ✅ Use associated types carefully for flexibility in generic protocols.

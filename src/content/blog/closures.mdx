@@ -1,0 +1,245 @@
+---
+title: "Closures in Swift"
+description: "A closure is a self-contained block of functionality that you can pass around and use in your code."
+pubDate: 2026-08-14
+tags: ["Swift","Closures","Functional"]
+emoji: "🔗"
+---
+
+A closure is a self-contained block of functionality that you can pass around and use in your code.
+It is similar to a function, but more lightweight and flexible.
+
+- In Swift:
+  - Functions are named closures
+  - Closures are anonymous functions
+  - Closures are reference types
+
+# 🔹 Closure Syntax
+- Full form:
+
+```
+{ (parameters) -> ReturnType in
+    statements
+}
+```
+
+
+Example:
+
+```
+let greet = { (name: String) -> String in
+    return "Hello \(name)"
+}
+```
+
+
+- Shorthand form:
+
+```
+let double = { $0 * 2 }
+```
+
+
+# 🔹 Closures Are Reference Types
+Closures are stored on the heap, and variables hold references to them.
+
+```
+let c1 = { print("Hi") }
+let c2 = c1   // both refer to the same closure instance
+```
+
+
+They behave just like classes in terms of copying and identity.
+
+# Capturing Values in Swift Closures
+Closures capture variables (bindings) from their surrounding scope.
+By default, Swift closures capture the variable itself, not a snapshot of its value.
+
+### Default Capture Behavior
+Closures capture variables by reference to their storage, regardless of whether the type is a value type or reference type.
+
+- Example with a Value Type
+
+```
+var x = 10
+let closure = { print(x) }
+
+x = 20
+closure()   // prints 20
+```
+
+
+- Even though Int is a value type, the closure prints 20.
+
+Why?
+Because the closure captures the variable x, not a copy of the value 10.
+
+# Capturing a Snapshot (Capture List)
+To capture a value at the moment the closure is created, use a capture list:
+
+```
+var x = 10
+let closure = { [x] in
+    print(x)
+}
+
+x = 20
+closure()   // prints 10
+```
+
+
+Here, [x] creates a copy of the value at closure creation time.
+
+Example with a Reference Type
+
+```
+class Counter { 
+    var value = 0 
+}
+
+let c = Counter()
+
+let closure = { 
+    c.value += 1 
+}
+
+closure()
+print(c.value)   // 1
+```
+
+
+Explanation:
+- The closure captures the variable c
+- c references a class instance
+- Modifying c.value affects the same shared object
+
+# 🔹 Capture Lists
+Capture lists control how values are captured.
+
+```
+Example: avoid reference cycles
+class ViewController {
+    var name = "VC"
+
+    func run() {
+        someAsyncFunction { [weak self] in
+            print(self?.name ?? "nil")
+        }
+    }
+}
+```
+
+
+- Capture types:
+  - [weak self] → does not retain self
+  - [unowned self] → does not retain, expects self to exist
+  - [value] → captures a specific value snapshot
+
+# 🔹 Escaping vs. Non-Escaping Closures
+#### Non-Escaping (default)
+Cannot outlive the function. Must be executed before the function returns.
+
+```
+func perform(_ action: () -> Void) {
+    action() // must be used here
+}
+```
+
+
+#### Escaping
+Closure may run later (async), so must be marked explicitly.
+
+```
+func performLater(_ action: @escaping () -> Void) {
+    DispatchQueue.main.async {
+        action()
+    }
+}
+```
+
+
+- Key differences:
+![Screenshot 2025-11-17 at 12 08 24 PM](https://github.com/user-attachments/assets/9483c1b5-433e-41d7-8d0e-10e6b6454af2)
+
+# Autoclosures
+A closure automatically created from an expression.
+
+```
+func log(_ message: @autoclosure () -> String) {
+    print("Log:", message())
+}
+
+log("Something happened") // no braces needed
+```
+
+
+- Best used for:
+  - Assertions
+  - Lazily evaluated expressions
+
+# 🔹 Trailing Closure Syntax
+
+```
+func fetchData(completion: (String) -> Void) { ... }
+
+fetchData { result in
+    print(result)
+}
+```
+
+
+- More readable when the closure is long.
+
+# 🔹 @Sendable Closures (Concurrency)
+A closure marked as @Sendable is safe to pass across concurrency domains.
+
+```
+func fetch(@Sendable task: @escaping () -> Void) { }
+```
+
+
+- Rules:
+  - No shared mutable state
+  - No capturing non-Sendable types
+
+# Memory Management & Retain Cycles
+Closures retain variables they capture.
+If a closure captures self, and self retains the closure, you get a retain cycle.
+- Example problem:
+
+```
+self.completion = {
+    self.doSomething()
+}
+```
+
+
+Use [weak self]:
+
+```
+self.completion = { [weak self] in
+    self?.doSomething()
+}
+```
+
+
+# Common Use Cases
+ - Completion handlers
+ - Async tasks
+ - Functional programming (map, filter, reduce)
+ - Callbacks in UI
+ - Event listeners
+ - Dependency injection
+
+# 🔹 Performance Notes
+- Closures allocate on the heap (reference type).
+- Capturing large structs increases memory usage.
+- Overuse of escaping closures can create memory leaks if not handled properly.
+
+# 🔹 Best Practices Checklist
+- Use non-escaping closures when possible
+- Use [weak self] in escaping closures
+- Keep closure bodies small
+- Avoid capturing large value types
+- Use capture lists for clarity
+- For concurrency, prefer @Sendable

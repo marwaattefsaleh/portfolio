@@ -1,0 +1,641 @@
+---
+title: "SwiftUI and the Scene Lifecycle"
+description: "Comprehensive documentation for your iOS Knowledge Base covering SwiftUI view lifecycle, scene lifecycle, app lifecycle, state management, and when…"
+pubDate: 2026-08-14
+tags: ["SwiftUI","UIKit"]
+emoji: "🍎"
+---
+
+Comprehensive documentation for your **iOS Knowledge Base** covering SwiftUI view lifecycle, scene lifecycle, app lifecycle, state management, and when to use single vs multi‑scene apps.
+
+---
+
+# 1. Introduction to SwiftUI Lifecycle
+
+SwiftUI does **not** use the classic UIKit lifecycle (`viewDidLoad`, `viewWillAppear`, etc.). Instead, SwiftUI uses:
+
+- **Declarative rendering**
+
+- **Value-based views**
+
+- **State-driven updates**
+
+Views in SwiftUI are **lightweight structs** that get re-created whenever their **state changes**.
+
+---
+
+# 2. SwiftUI View Lifecycle (How SwiftUI Builds Views)
+
+SwiftUI follows these steps:
+
+### 1. Initializer runs
+
+When a view is created.
+
+### 2. body is evaluated
+
+Whenever:
+
+- A `@State` variable changes
+
+- A `@Binding` changes
+
+- An `@ObservedObject` publishes changes
+
+- Environment values change
+
+### 3. View diffing happens
+
+SwiftUI compares the new view tree to the previous version.
+
+It updates only what changed.
+
+### 4. Rendering
+
+SwiftUI updates the screen.
+
+---
+
+## 2.1. When does the init() run?
+
+- Only when the view **identity changes**.
+
+- Identity is driven by:
+  Parent view initialization
+
+- Different `id` value
+
+- Navigation pushes
+
+- Sheet presentations
+
+### Example
+
+```swift
+struct CounterView: View {
+    @State var count = 0
+    init() { print("init") }
+
+    var body: some View {
+        Button("Tap: \(count)") { count += 1 }
+    }
+}
+```
+
+
+`init()` does **NOT** run when count changes.
+
+Only the `body` recomputes.
+
+---
+
+# 3. Using .onAppear and .onDisappear
+
+These replace UIKit’s `viewWillAppear` and `viewDidDisappear`.
+
+### When .onAppear triggers
+
+- First time the view comes onscreen
+
+- After navigating back to a screen
+
+- After sheet/destination appears
+
+### When .onDisappear triggers
+
+- When view leaves the screen
+
+- When replaced by another view
+
+Example:
+
+```swift
+.onAppear { print("Shown") }
+.onDisappear { print("Hidden") }
+```
+
+
+---
+
+# 4. SwiftUI State Management Overview
+
+## 4.1 @State
+
+- For local, simple data
+
+- Stored inside view’s backing storage
+
+## 4.2 @Binding
+
+- Allows child view to mutate parent `@State`
+
+## 4.3 @ObservedObject
+
+- For reference-type external data models
+
+- Responds to `objectWillChange`
+
+## 4.4 @StateObject
+
+- Create and own an observable object **once** in the view lifecycle
+
+- Use when the view owns the object
+
+## 4.5 @EnvironmentObject
+
+- For shared app-wide data
+
+- Must be injected from parent
+
+## 4.6 @Environment
+
+- System values (colorScheme, scenePhase, locale ...)
+
+Examples:
+
+```swift
+@Environment(\.scenePhase) var scenePhase
+```
+
+
+---
+
+# 5. Scene Life Cycle (App-Level Lifecycle)
+
+SwiftUI apps rely on the **Scene API**.
+
+### Structure:
+
+```swift
+@main
+struct MyApp: App {
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+        }
+    }
+}
+```
+
+
+## 5.1 Scene Types
+
+### WindowGroup
+
+- Default scene
+
+- Supports multi-window on iPad & macOS
+
+- Spawns new instances for each window
+
+### DocumentGroup
+
+- For document-based apps (Pages, Notes)
+
+### MenuBarExtra (macOS)
+
+- Menu bar apps
+
+---
+
+# 6. Scene Phases
+
+SwiftUI exposes lifecycle via `scenePhase`.
+
+```swift
+@Environment(\.scenePhase) var scenePhase
+```
+
+
+### Phases
+
+- `.active` – app is in foreground
+
+- `.inactive` – transitioning (e.g., phone call overlay)
+
+- `.background` – app not visible
+
+### Listening to changes
+
+```swift
+.onChange(of: scenePhase) { phase in
+    switch phase {
+    case .active: print("App Active")
+    case .inactive: print("App Inactive")
+    case .background: print("App Background")
+    }
+}
+```
+
+
+This is the SwiftUI equivalent of:
+
+- `applicationDidBecomeActive`
+
+- `applicationDidEnterBackground`
+
+---
+
+# 7. Single Scene vs Multi-Scene Apps
+
+## 7.1 Single Scene (default)
+
+Use when:
+
+- App does not need multiple windows
+
+- Common for iPhone apps
+
+- Simpler state management
+
+Example:
+
+```swift
+WindowGroup {
+    ContentView()
+}.handlesExternalEvents(matching: [])
+```
+
+
+## 7.2 Multi-Scene
+
+Use when:
+
+- iPad apps supporting multiple windows
+
+- macOS apps needing multiple document views
+
+- Apps like Notes, Safari, Files
+
+Example:
+
+```swift
+@main
+struct MyApp: App {
+    var body: some Scene {
+        WindowGroup("Main Window") {
+            ContentView()
+        }
+
+        WindowGroup("Secondary Window") {
+            SettingsView()
+        }
+    }
+}
+```
+
+
+---
+
+# 8. App Life Cycle in SwiftUI vs UIKit
+
+Concept | SwiftUI | UIKit
+-- | -- | --
+App launch | ScenePhase (active) | application didFinishLaunching
+App goes to background | scenePhase .background | applicationDidEnterBackground
+View appears | .onAppear | viewWillAppear
+View disappears | .onDisappear | viewDidDisappear
+
+---
+
+# 9. Handling App Launch Logic
+
+Use `@main` App initializer or `.task` modifier.
+
+```swift
+@main
+struct MyApp: App {
+    init() {
+        // initial setup
+    }
+
+    var body: some Scene {
+        WindowGroup { ContentView() }
+    }
+}
+```
+
+
+Or inside a view:
+
+```swift
+.task {
+    await viewModel.loadData()
+}
+```
+
+
+---
+
+# 10. View Identity & .id()
+
+Changing an `.id()` forces SwiftUI to recreate a view.
+
+Example:
+
+```swift
+List(items) { item in
+    Row(item: item)
+}
+.id(UUID()) // forces reload
+```
+
+
+---
+
+# 11. Listening to State Changes
+
+## 11.1 .onChange(of:)
+
+```swift
+.onChange(of: viewModel.value) { newValue in
+    print(newValue)
+}
+```
+
+
+## 11.2 Combine publishers
+
+```swift
+.onReceive(timer) { _ in
+    // update UI
+}
+```
+
+
+## 11.3 Swift Concurrency
+
+```swift
+.task(id: someState) {
+    await viewModel.load()
+}
+```
+
+
+---
+
+# 12. Common SwiftUI Lifecycle Mistakes
+
+- Using `@ObservedObject` instead of `@StateObject`
+
+- Modifying state inside `body`
+
+- Performing async work in `onAppear` without `Task`
+
+- Forgetting to handle scenePhase transitions
+
+- Expecting view `init()` to behave like UIKit lifecycle
+
+---
+
+# 13. Summary
+
+SwiftUI is declarative and state-driven:
+
+- Views are recreated often
+
+- Body recomputes when state changes
+
+- Scene lifecycle replaces traditional app delegate
+
+- Multi-scene is useful for iPad/macOS apps
+
+- `scenePhase`, tasks, and state wrappers drive the app’s behavior
+
+# ✅ some vs any in SwiftUI
+Swift has two ways to use protocols as types:
+- Opaque types → some
+- Existential types → any
+
+  - They behave differently and are used in different scenarios.
+
+## 🔵 some – Opaque Type
+Meaning:
+“I will return one specific concrete type, but I am hiding which one.”
+
+- Key Properties
+  - Compiler knows the exact type at compile time.
+  - Caller does not know the concrete type.
+  - Fast (no dynamic dispatch / no heap boxing).
+  - Used a lot in SwiftUI, especially for View-building.
+
+Example
+
+```
+var body: some View {
+    Text("Hello")
+}
+```
+
+
+- Here, body always returns one specific View type, even if it’s complex after modifiers.
+
+- When to use some
+  - When you want static dispatch (better performance).
+  - When returning a single, fixed type, but want to hide it.
+  - Almost always for SwiftUI views.
+
+## 🔴 any – Existential Type
+Meaning:
+“I can store any type that conforms to this protocol.”
+
+- Key Properties
+  - Used for heterogeneous collections and values of multiple types.
+  - Dynamic dispatch (slower, uses runtime lookup).
+  - Does not require the same underlying concrete type.
+  - Can erase type differences.
+
+Example
+
+```
+let items: [any View] = [
+    Text("A"),
+    Image(systemName: "star")
+]
+```
+
+
+You cannot write this using some View because the elements have different types.
+
+- When to use any
+  - When you need to store multiple different concrete types that conform to a protocol.
+  - In architectures/abstractions like:
+    - Repositories
+    - Logging
+    - Network managers
+
+# ⚡ SwiftUI Practical Differences
+- 1. body must use some View
+
+Why?
+- Because SwiftUI builds a type tree of views at compile time.
+- Returning any View would erase too much type information.
+
+❌ Not allowed:
+
+```
+var body: any View { ... }
+```
+
+
+- 2. Dynamic view switching requires any View or conditional some View
+Using any View:
+
+```
+var content: any View {
+    if isLoggedIn {
+        return Text("Home")
+    } else {
+        return Text("Login")
+    }
+}
+```
+
+
+Using some View with type consistency:
+
+```
+var body: some View {
+    Group {
+        if isLoggedIn {
+            HomeView()
+        } else {
+            LoginView()
+        }
+    }
+}
+```
+
+
+Group allows both branches to produce the same overall concrete type.
+
+## 🧠 Summary Table
+
+![Screenshot 2025-11-19 at 1 48 22 AM](https://github.com/user-attachments/assets/abbdbf5e-4ce2-4a97-b5a0-b7bf96778ff8)
+
+# ✅ What is ViewBuilder in SwiftUI?
+ViewBuilder is a special SwiftUI attribute (a result builder) that allows you to write multiple views inside a closure and SwiftUI will combine them into a single view.
+
+In short:
+
+ViewBuilder lets you write “declarative UI code” with multiple views inside one closure — without needing return statements.
+- 🔵 Why Does SwiftUI Need ViewBuilder?
+
+In normal Swift functions, you must return one value.
+
+But in SwiftUI, you often write:
+
+```
+var body: some View {
+    VStack {
+        Text("Hello")
+        Image(systemName: "star")
+    }
+}
+```
+
+
+The closure inside VStack \{ ... \} actually contains two different views.
+
+Without @ViewBuilder, this would be illegal Swift code — you can’t return two values.
+
+- SwiftUI solves this using ViewBuilder, which:
+  - Accepts multiple children
+  - Infers layout containers (TupleView)
+  - Automatically builds a combined view
+
+## 🔶 What ViewBuilder Actually Does
+
+This:
+
+```
+VStack {
+    Text("Hello")
+    Image("star")
+}
+
+```
+
+
+Is transformed into code like:
+
+```
+ViewBuilder.buildBlock(
+    Text("Hello"),
+    Image("star")
+)
+```
+
+
+And then SwiftUI internally wraps them in a TupleView.
+
+This is thanks to result builder functions:
+
+- buildBlock
+
+- buildOptional
+
+- buildEither
+
+- buildArray
+
+## 📦 Where is @ViewBuilder used?
+
+You see it almost everywhere in SwiftUI:
+
+- 1. In containers
+
+```
+VStack { ... }
+HStack { ... }
+ZStack { ... }
+Form { ... }
+List { ... }
+```
+
+
+- 2. In body (implicitly)
+
+You don’t need to write it — SwiftUI adds it automatically.
+
+- 3. In custom view initializers
+
+You can write your own ViewBuilder-powered APIs:
+
+```
+struct CustomCard<Content: View>: View {
+    @ViewBuilder var content: () -> Content
+
+    var body: some View {
+        VStack {
+            content()
+        }
+    }
+}
+```
+
+
+## 🔥 Conditional Views with ViewBuilder
+
+ViewBuilder supports if and switch:
+
+```
+VStack {
+    Text("Title")
+
+    if isLoggedIn {
+        Text("Welcome back")
+    } else {
+        Text("Please sign in")
+    }
+}
+```
+
+
+This works because ViewBuilder rewrites it using:
+- buildEither(first:)
+- buildEither(second:)
+- buildOptional
+
+## 🧠 Summary (Interview-Level)
+![Screenshot 2025-11-19 at 1 52 09 AM](https://github.com/user-attachments/assets/4a4d0c28-dc8b-4f1e-a482-25e05ea3aa3c)

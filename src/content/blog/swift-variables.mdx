@@ -1,0 +1,187 @@
+---
+title: "Swift Variables in Depth"
+description: "Swift provides multiple ways to define variables and properties. Understanding the differences between stored variables, computed properties, and l…"
+pubDate: 2026-08-14
+tags: ["Swift","Basics"]
+emoji: "🏷️"
+---
+
+Swift provides multiple ways to define variables and properties. Understanding the differences between **stored variables, computed properties, and lazy properties** (including lazy with computed closure) is essential for writing clean and efficient Swift code.
+
+---
+
+## 1. Stored Variables
+
+A **stored variable** holds a value directly in memory.
+
+```swift
+var name: String = "Marwa"
+var age: Int = 28
+```
+
+
+- Value is kept in memory.
+
+- Can be **mutable (`var`)** or **immutable (`let`)**.
+
+- Always initialized before use.
+
+✅ **Use Case**: For direct data storage.
+
+---
+
+## 2. Computed Properties (Computed var)
+
+A **computed property** does not store data — it **calculates a value on demand**.
+
+```swift
+var fullName: String {
+    return "\(firstName) \(lastName)"
+}
+```
+
+
+- No storage → recalculated **every time it’s accessed**.
+
+- Can have **getter** and optional **setter**:
+
+```swift
+var rectangleArea: Int {
+    get { width * height }
+    set { width = newValue / height }
+}
+```
+
+
+✅ **Use Case**: When the value depends on other properties.
+
+---
+
+## 3. Lazy Stored Properties (lazy var)
+
+A **lazy property** is a stored property whose value is **not created until it is first used**.
+
+```swift
+lazy var imageLoader: ImageLoader = ImageLoader()
+```
+
+
+- Must be declared with `var` (not `let`).
+
+- Initialized **only once**, the first time it’s accessed.
+
+- Useful for **expensive operations** or values not always needed.
+
+Example with closure:
+
+```swift
+lazy var numbers: [Int] = {
+    print("Initializing...")
+    return [1, 2, 3, 4, 5]
+}()
+```
+
+
+✅ **Use Case**: For expensive initialization you may not always need.
+
+---
+
+## 4. Lazy with Computed Closure vs Computed Property
+
+Here’s where confusion happens:
+
+### Lazy with Computed Closure
+
+```swift
+lazy var randomNumber: Int = {
+    print("Generated once")
+    return Int.random(in: 1...100)
+}()
+```
+
+
+- Value is **calculated once, then stored**.
+
+- The next time you access `randomNumber`, it **reuses the same value**.
+
+### Computed Property
+
+```swift
+var randomNumber: Int {
+    print("Generated every time")
+    return Int.random(in: 1...100)
+}
+```
+
+
+- Value is **recalculated every time you access it**.
+
+- Does **not store** the result.
+
+---
+
+## 5. Comparison Table
+
+Feature | Lazy Stored Property (lazy var) | Computed Property (var)
+-- | -- | --
+Storage | Stores value after first access | No storage (always recalculated)
+Initialization | Only once, on first access | Every time it’s accessed
+Performance | Good for expensive setup | Good for lightweight logic
+Mutability | Must be var | Can be let (if only getter)
+Example | lazy var data = loadData() | var area: Int \{ width * height \}
+
+---
+
+## 6. Best Practices
+
+- Use **stored properties** for simple values.
+
+- Use **computed properties** when the value depends on other data.
+
+- Use **lazy properties** for heavy initialization that may not always be used.
+
+- If you need a value **once and keep it**, use **lazy var**.
+
+- If you need a value **recalculated every time**, use **computed var**.
+
+---
+
+## 7. Real Example
+
+```swift
+struct UserProfile {
+    var firstName: String
+    var lastName: String
+    
+    // Computed property
+    var fullName: String {
+        return "\(firstName) \(lastName)"
+    }
+    
+    // Lazy property with closure (only computed once)
+    lazy var profilePicture: UIImage = {
+        print("Loading image...")
+        return UIImage(named: "\(firstName)_\(lastName).png") ?? UIImage()
+    }()
+}
+```
+
+
+Usage:
+
+```swift
+var user = UserProfile(firstName: "Marwa", lastName: "Attef")
+
+print(user.fullName)        // "Marwa Attef" (recomputed each time)
+print(user.profilePicture)  // "Loading image..." (only first time)
+print(user.profilePicture)  // No print, reused stored value
+```
+
+
+---
+
+👉 Now the **difference between computed lazy var and computed var** should be crystal clear:
+
+- **lazy var with closure** → computed once, stored.
+
+- **computed property** → computed every time, not stored.

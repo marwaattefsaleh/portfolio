@@ -1,0 +1,271 @@
+---
+title: "What is a Category in Objective-C?"
+description: "A Category allows you to add new methods to an existing class without subclassing or modifying the original source code."
+pubDate: 2026-08-14
+tags: ["Objective-C"]
+emoji: "🧷"
+---
+
+A **Category** allows you to add new methods to an existing class **without subclassing** or modifying the original source code.
+
+Categories are commonly used to:
+
+- Extend Apple framework classes (e.g., `NSString`, `UIView`, `UIColor`)
+- Organize large classes into smaller, focused files
+- Reuse common functionality across an application
+
+---
+
+# Syntax
+
+### Header File
+
+```objective-c
+// NSString+Validation.h
+
+@interface NSString (Validation)
+
+- (BOOL)isValidEmail;
+
+@end
+```
+
+
+### Implementation
+
+```objective-c
+// NSString+Validation.m
+
+@implementation NSString (Validation)
+
+- (BOOL)isValidEmail {
+    // Validation logic
+    return YES;
+}
+
+@end
+```
+
+
+### Usage
+
+```objective-c
+NSString *email = @"test@test.com";
+
+if ([email isValidEmail]) {
+    NSLog(@"Valid");
+}
+```
+
+
+No subclassing is required.
+
+---
+
+# Why Use Categories?
+
+## 1. Extend Apple Framework Classes
+
+Categories let you add convenience methods to existing system classes.
+
+### Example
+
+```objective-c
+@interface UIColor (AppTheme)
+
++ (UIColor *)primaryColor;
+
+@end
+```
+
+
+Usage:
+
+```objective-c
+UIColor *color = [UIColor primaryColor];
+```
+
+
+No custom subclass is needed.
+
+---
+
+## 2. Organize Large Classes
+
+Instead of putting hundreds or thousands of lines into a single implementation file, categories allow you to group related functionality.
+
+For example:
+
+```text
+UIViewController+Networking
+UIViewController+UITableView
+UIViewController+Animations
+UIViewController+Validation
+```
+
+
+This improves:
+
+- ✅ Readability
+- ✅ Maintainability
+- ✅ Code organization
+
+---
+
+## 3. Reuse Common Functionality
+
+Categories are ideal for sharing helper methods throughout an application.
+
+Examples include:
+
+```text
+UIView+Shadow
+UIView+CornerRadius
+UIView+Gradient
+UIImage+Resize
+NSDate+Formatting
+```
+
+
+These extensions can be reused anywhere without subclassing.
+
+---
+
+# Can Categories Add Properties?
+
+**Not directly.**
+
+Categories **cannot add instance variables (ivars)** because they do not change the memory layout of an object.
+
+For example, the following is **not allowed**:
+
+```objective-c
+@property (nonatomic, strong) NSString *name;
+```
+
+
+Since no storage exists for the property, the compiler cannot synthesize it.
+
+---
+
+# How Can Categories "Add" Properties?
+
+The Objective-C runtime provides **Associated Objects**, which allow you to simulate stored properties.
+
+Common runtime APIs:
+
+```objective-c
+objc_setAssociatedObject(...)
+objc_getAssociatedObject(...)
+```
+
+
+These functions associate additional values with an object at runtime without modifying its memory layout.
+
+---
+
+# Category vs Subclass
+
+| Category | Subclass |
+|----------|----------|
+| Adds methods | Adds methods and stored properties |
+| Cannot add ivars | Can add ivars |
+| Does not create a new type | Creates a new type |
+| Extends existing behavior | Can extend and override behavior |
+
+---
+
+# Can Categories Override Methods?
+
+**Technically, yes—but it is strongly discouraged.**
+
+If a category implements a method with the same selector as an existing method, the Objective-C runtime does **not** define which implementation will be used.
+
+The result depends on which implementation is loaded last, making the behavior unpredictable and difficult to debug.
+
+If you need to modify existing behavior, prefer:
+
+- Subclassing
+- Method Swizzling (only in carefully controlled situations)
+
+---
+
+# Real-World Examples
+
+Categories are commonly used to extend existing classes with reusable functionality.
+
+Examples:
+
+- `NSString+Validation`
+- `UIView+Animations`
+- `UIColor+Theme`
+- `UIImage+Resize`
+- `NSDate+Formatting`
+
+---
+
+# Category vs Class Extension
+
+This is a common interview follow-up question.
+
+## Category
+
+```objective-c
+@interface UIView (Shadow)
+
+- (void)addShadow;
+
+@end
+```
+
+
+### Characteristics
+
+- Public
+- Adds methods
+- Cannot add ivars
+- Commonly used to extend existing classes
+
+---
+
+## Class Extension
+
+```objective-c
+@interface ViewController ()
+
+@property (nonatomic, strong) NSString *token;
+
+@end
+```
+
+
+### Characteristics
+
+- Anonymous (typically declared in the `.m` file)
+- Used for private methods and properties
+- Can declare properties because it is considered part of the original class implementation
+- The compiler synthesizes storage for these properties
+
+---
+
+# Category vs Class Extension
+
+| Feature | Category | Class Extension |
+|---------|----------|-----------------|
+| Declared In | `.h` or `.m` | Usually `.m` |
+| Public | ✅ Yes | ❌ No |
+| Add Methods | ✅ Yes | ✅ Yes |
+| Add Stored Properties | ❌ No | ✅ Yes |
+| Add Instance Variables | ❌ No | ✅ (through synthesized properties) |
+| Primary Purpose | Extend existing classes | Hide private implementation details |
+
+---
+
+# Key Takeaways
+
+- A **Category** extends an existing class without subclassing.
+- Categories are commonly used to extend Apple framework classes and organize large codebases.
+- Categories **cannot add instance variables or true stored properties**.
+- Associated Objects allow categories to simulate stored properties at runtime.
+- Avoid overriding existing methods in categories because runtime behavior is undefined.
+- Use **Class Extensions** for private methods and properties that belong to the original class implementation.

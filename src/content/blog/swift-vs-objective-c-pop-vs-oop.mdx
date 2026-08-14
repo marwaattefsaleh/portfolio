@@ -1,0 +1,159 @@
+---
+title: "Swift vs Objective-C: POP vs OOP"
+description: "Apple designed Swift to fix the weaknesses of OOP-heavy Objective-C."
+pubDate: 2026-08-14
+tags: ["Swift","Objective-C","POP","OOP"]
+emoji: "⚔️"
+---
+
+![Screenshot 2025-11-11 at 8 40 11 PM](https://github.com/user-attachments/assets/7c5f439c-6199-4e51-92d1-6441c5af15e5)
+
+- So while Objective-C is class-centric, Swift is protocol-centric.
+
+# 🚀 2. Why Swift Moved Toward POP
+Apple designed Swift to fix the weaknesses of OOP-heavy Objective-C.
+The main issues they saw with pure OOP:
+- Too much inheritance → deep hierarchies.
+- Tight coupling → hard to reuse and test.
+- Shared mutable state in reference types (classes).
+- Runtime errors due to dynamic typing in Objective-C.
+Swift solves this by promoting protocols + value types — a more modular, safe, and flexible approach.
+
+# 🧱 3. Example: Objective-C (OOP Style)
+
+```
+@interface Animal : NSObject
+- (void)speak;
+@end
+
+@implementation Animal
+- (void)speak {
+    NSLog(@"Animal sound");
+}
+@end
+
+@interface Dog : Animal
+@end
+
+@implementation Dog
+- (void)speak {
+    NSLog(@"Woof!");
+}
+@end
+
+Dog *dog = [Dog new];
+[dog speak]; // Woof!
+```
+
+
+✅ Classic OOP using inheritance.
+⚠️ But if you add more subclasses (Cat, Bird, Fish...), you get a huge hierarchy.
+
+# 🧩 4. Example: Swift (POP Style)
+
+```
+protocol SoundMaking {
+    func makeSound()
+}
+
+extension SoundMaking {
+    func makeSound() {
+        print("Default sound")
+    }
+}
+
+struct Dog: SoundMaking {
+    func makeSound() {
+        print("Woof!")
+    }
+}
+
+struct Cat: SoundMaking {
+    func makeSound() {
+        print("Meow!")
+    }
+}
+
+let pets: [SoundMaking] = [Dog(), Cat()]
+pets.forEach { $0.makeSound() }
+```
+
+
+- ✅ No inheritance, no class hierarchy.
+- ✅ Uses protocols + structs (value types).
+- ✅ Easy to add new types (e.g., Bird, Fish) without touching existing code.
+
+# ⚙️ 5. Technical Differences
+![Screenshot 2025-11-11 at 8 52 37 PM](https://github.com/user-attachments/assets/3465698d-6a2e-440f-9388-41e09b83b741)
+
+# 💡 6. Why POP is Powerful in Swift
+- ✅ Protocol extensions let you define shared default behavior.
+- ✅ Value types (structs) prevent unintended side effects.
+- ✅ Multiple protocol conformance replaces deep inheritance chains.
+- ✅ Static dispatch improves performance and safety.
+- ✅ Easier to unit test and mock dependencies.
+
+Example:
+
+```
+protocol Storable {
+    func save()
+}
+
+extension Storable {
+    func save() {
+        print("Default save logic")
+    }
+}
+
+struct User: Storable { }
+User().save() // Default save logic
+```
+
+
+# ⚖️ 7. When OOP Still Makes Sense in Swift
+Even though Swift prefers POP, OOP isn’t gone — you still use it when needed.
+
+- ✅ Use classes (OOP) when you need:
+ - Reference semantics (shared state).
+ - UIKit/AppKit integration (UIViews, UIViewControllers are classes).
+ - Objective-C interoperability.
+ - Object lifecycle control (deinit, inheritance).
+
+- ✅ Use structs/protocols (POP) when you need:
+ - Value semantics (copies, immutability).
+ - Code reuse without inheritance.
+ - Safer concurrency.
+ - Lightweight, testable models.
+
+# 🧩 8. Real-World Apple Example: SwiftUI
+SwiftUI is 100% protocol-oriented.
+
+```
+struct ContentView: View {
+    var body: some View {
+        Text("Hello, SwiftUI")
+    }
+}
+```
+
+
+- ✅ View is a protocol.
+- ✅ ContentView is a struct, not a class.
+- ✅ Composes small protocol-based views rather than subclassing a base view.
+
+# 🧠 9. Summary — Why Swift’s POP is Better than Obj-C’s OOP
+![Screenshot 2025-11-11 at 9 00 47 PM](https://github.com/user-attachments/assets/6ff1fea3-185c-4f21-aa13-ef502d4f4114)
+
+- ✅ Swift (POP) = safer, faster, more composable, testable, and maintainable.
+- ⚙️ Objective-C (OOP) = more flexible at runtime but less safe and more error-prone.
+
+# 🧭 10. Final Thought
+Swift didn’t abandon OOP — it evolved it.
+- Swift merges:
+  - OOP for reference semantics and UIKit frameworks.
+  - POP for modular, reusable, type-safe design.
+
+- The best Swift developers use both paradigms together depending on the problem:
+  - Classes when you need shared state.
+  - Protocols & structs when you need flexibility and safety.

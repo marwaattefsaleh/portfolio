@@ -1,0 +1,204 @@
+---
+title: "Realm Swift"
+description: ".package(url: \"https://github.com/realm/realm-swift.git\", from: \"11.0.0\")"
+pubDate: 2026-08-14
+tags: ["Persistence","Realm"]
+emoji: "🗃️"
+---
+
+- Realm is a mobile database designed for iOS, macOS, and Android.
+- Fully object-oriented: store Swift classes or structs as Realm objects.
+- Fast and lightweight: optimized for mobile devices.
+- Thread-safe: objects can be accessed across threads with rules.
+- Reactive support: notify UI of database changes.
+
+# Installation
+Using Swift Package Manager
+
+```
+dependencies: [
+    .package(url: "https://github.com/realm/realm-swift.git", from: "11.0.0")
+]
+```
+
+
+Using CocoaPods
+
+```
+pod 'RealmSwift'
+```
+
+
+# Basic Concepts
+## Realm Object
+Realm objects must inherit from Object:
+
+```
+import RealmSwift
+
+class Experience: Object {
+    @Persisted(primaryKey: true) var id: String
+    @Persisted var title: String
+    @Persisted var desc: String?
+    @Persisted var likes: Int = 0
+    @Persisted var isRecommended: Bool = false
+}
+```
+
+
+- @Persisted → marks a property to be saved in Realm
+- primaryKey → uniquely identifies the object
+- Optional properties can be String?, Int?, etc.
+
+## Realm Instance
+
+```
+let realm = try! Realm()
+```
+
+
+- Realm automatically manages its database file.
+- Default location: App sandbox → default.realm
+
+# CRUD Operations
+## Create / Insert
+
+```
+let experience = Experience()
+experience.id = "1"
+experience.title = "Beach Trip"
+
+try! realm.write {
+    realm.add(experience)
+}
+```
+
+
+## Read / Fetch
+
+```
+let allExperiences = realm.objects(Experience.self)
+let recommended = realm.objects(Experience.self).filter("isRecommended == true")
+```
+
+
+- Returns Results → lazy, auto-updating collection
+
+## Update
+
+```
+if let experience = realm.objects(Experience.self).first {
+    try! realm.write {
+        experience.title = "Mountain Trip"
+        experience.likes += 1
+    }
+}
+```
+
+
+# Relationships
+## One-to-many
+
+```
+class City: Object {
+    @Persisted(primaryKey: true) var id: String
+    @Persisted var name: String
+    @Persisted var experiences = List<Experience>()
+}
+```
+
+
+- Use List for to-many relationships
+
+## LinkingObjects
+
+```
+class Experience: Object {
+    @Persisted(originProperty: "experiences") var city: LinkingObjects<City>
+}
+```
+
+
+- LinkingObjects → inverse relationship
+- Updates must be wrapped in realm.write \{\}
+
+## Delete
+
+```
+if let experience = realm.objects(Experience.self).first {
+    try! realm.write {
+        realm.delete(experience)
+    }
+}
+```
+
+
+## Querying & Filtering
+
+Predicate filtering
+
+```
+let recent = realm.objects(Experience.self).filter("title CONTAINS[c] 'Beach'")
+```
+
+
+Sorting
+
+```
+let sorted = realm.objects(Experience.self).sorted(byKeyPath: "likes", ascending: false)
+```
+
+
+Combining
+
+```
+let recommendedAndPopular = realm.objects(Experience.self)
+    .filter("isRecommended == true AND likes > 10")
+    .sorted(byKeyPath: "likes", ascending: false)
+```
+
+
+# Threading & Live Objects
+- Realm objects are thread-confined:
+  - Cannot pass a live Realm object to another thread
+  - Use thread-safe references if needed:
+
+```
+let experienceRef = ThreadSafeReference(to: experience)
+
+DispatchQueue.global().async {
+    let realm = try! Realm()
+    if let experience = realm.resolve(experienceRef) {
+        print(experience.title)
+    }
+}
+```
+
+
+Results and List are auto-updating when the underlying database changes
+
+# Observing Changes
+
+```
+let token = realm.objects(Experience.self).observe { changes in
+    switch changes {
+    case .initial(let results):
+        print("Initial count: \(results.count)")
+    case .update(let results, let deletions, let insertions, let modifications):
+        print("Updated count: \(results.count)")
+    case .error(let error):
+        print("Error: \(error)")
+    }
+}
+```
+
+
+- observe → reactive updates for UI
+
+# Best Practices
+- Avoid fetching all objects → use filtering and limits
+- Use primary keys for efficient updates
+- Minimize writes on the main thread → can block UI
+- Use ThreadSafeReference for cross-thread operations
+- Separate Realm objects from UI models (like using ExperienceEntity)
+- Don’t mutate Realm objects outside write block

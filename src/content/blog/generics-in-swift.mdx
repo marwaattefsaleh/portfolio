@@ -1,0 +1,171 @@
+---
+title: "Generics in Swift"
+description: "Generics are a powerful feature in Swift that allow you to write flexible, reusable functions, methods, and types that can work with any type, whil…"
+pubDate: 2026-08-14
+tags: ["Swift","Generics"]
+emoji: "🧬"
+---
+
+## 1. What are Generics?
+
+Generics are a powerful feature in Swift that allow you to write flexible, reusable functions, methods, and types that can work with **any type**, while maintaining **type safety**. Instead of writing multiple versions of the same code for different types, you can use generics to abstract the type.
+
+**Example: Generic Function**
+
+```swift
+func swapValues<T>(_ a: inout T, _ b: inout T) {
+    let temp = a
+    a = b
+    b = temp
+}
+
+var x = 5
+var y = 10
+swapValues(&x, &y)
+print(x, y) // Output: 10 5
+```
+
+
+Here, `T` is a placeholder for any type. The same function works for `Int`, `String`, or even custom types.
+
+---
+
+## 2. Generics vs Base Class
+
+Sometimes developers wonder if they should use **generics** or just **inherit from a base class**. Here’s the difference:
+
+Feature | Generics | Base Class
+-- | -- | --
+Type Safety | Strong type safety at compile time | Can require casting, less type-safe
+Flexibility | Works with any type without knowing it in advance | Limited to the inheritance hierarchy
+Performance | No runtime type checks needed | Might require runtime casting
+Reusability | Can reuse logic for any type | Reusable only for subclass types
+
+**Example using Base Class**
+
+```swift
+class Animal {}
+class Dog: Animal {}
+class Cat: Animal {}
+
+func printAnimalName(_ animal: Animal) {
+    print("Animal: \(animal)")
+}
+```
+
+
+Here, all animals must inherit from `Animal`. You **cannot** pass types unrelated to `Animal`.
+
+**Example using Generics**
+
+```swift
+func printName<T>(_ value: T) {
+    print("Value: \(value)")
+}
+```
+
+
+Now, any type can be passed without being part of a specific hierarchy.
+
+---
+
+## 3. When to Use Generics
+
+- When you want a **function, struct, or class** to work with **multiple types**.
+
+- When you want to **avoid code duplication**.
+
+- When you want **type safety** without using `Any` or typecasting.
+
+- When designing **data structures** like Stack, Queue, or LinkedList.
+
+**Example: Generic Stack**
+
+```swift
+struct Stack<T> {
+    private var items: [T] = []
+
+    mutating func push(_ item: T) {
+        items.append(item)
+    }
+
+    mutating func pop() -> T? {
+        return items.popLast()
+    }
+}
+
+var intStack = Stack<Int>()
+intStack.push(10)
+intStack.push(20)
+
+var stringStack = Stack<String>()
+stringStack.push("Hello")
+stringStack.push("World")
+```
+
+
+---
+
+## 4. Benefits of Using Generics
+
+- **Code Reusability:** Write once, use for any type.
+
+- **Type Safety:** Avoids runtime type errors and casting.
+
+- **Flexibility:** Works with any type, including custom types.
+
+- **Performance:** No runtime checks or type casting required.
+
+- **Better API Design:** Makes your code more generic and modular.
+
+---
+
+## 5. How to Write Generics in Swift
+
+### Generic Function
+
+```swift
+func genericFunction<T>(value: T) -> T {
+    return value
+}
+```
+
+
+### Generic Type (Class/Struct/Enum)
+
+```swift
+struct Box<T> {
+    var item: T
+}
+```
+
+
+### Generic Constraints
+
+Sometimes you want a generic type to conform to a **protocol** or be a **subclass**:
+
+```swift
+func findIndex<T: Equatable>(of valueToFind: T, in array: [T]) -> Int? {
+    for (index, value) in array.enumerated() {
+        if value == valueToFind {
+            return index
+        }
+    }
+    return nil
+}
+```
+
+
+Here, `T: Equatable` ensures the type can be compared using `==`.
+
+---
+
+### ✅ Summary
+
+- Generics allow reusable and type-safe code.
+
+- They are more flexible and type-safe compared to using base classes.
+
+- Use generics for data structures, reusable functions, and protocols.
+
+- Combine generics with constraints for stronger compile-time safety.

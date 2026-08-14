@@ -1,0 +1,223 @@
+---
+title: "Reference Types in Swift"
+description: "Reference types in Swift are objects stored in the heap, where variables hold a reference (pointer) to the actual memory location. The primary refe…"
+pubDate: 2026-08-14
+tags: ["Swift","Value Types"]
+emoji: "📎"
+---
+
+Reference types in Swift are objects stored in the **heap**, where variables hold a reference (pointer) to the actual memory location. The primary reference type in Swift is **class**.
+
+---
+
+## What is a Reference Type?
+
+A reference type allows multiple variables to point to the same object in memory. Changing one reference affects all others.
+
+```swift
+class Person {
+    var name: String
+    init(name: String) {
+        self.name = name
+    }
+}
+
+var person1 = Person(name: "Alice")
+var person2 = person1
+person2.name = "Bob"
+print(person1.name) // Output: Bob
+```
+
+
+Notice that modifying `person2` also changes `person1` because both point to the same object.
+
+---
+
+## 1. Copy Behavior
+
+- Reference types are **shared**: assigning one variable to another points to the same memory.
+
+- Mutating one reference affects all references.
+
+- Unlike structs (value types), changing a reference type instance affects all references.
+
+```swift
+class Counter {
+    var count = 0
+}
+
+let a = Counter()
+let b = a
+b.count += 1
+print(a.count) // Output: 1
+```
+
+
+---
+
+## 2. Deinitializers
+
+- Classes can define a `deinit` method, called when the object is deallocated.
+
+- Useful for cleaning up resources like observers, timers, or file handles.
+
+```swift
+class FileHandler {
+    let fileName: String
+    init(fileName: String) { self.fileName = fileName }
+    deinit {
+        print("\(fileName) closed")
+    }
+}
+```
+
+
+---
+
+## 3. Memory Management with ARC
+
+Swift uses **Automatic Reference Counting (ARC)** to manage memory:
+
+- ARC tracks how many **strong references** exist for an object.
+
+- When reference count reaches `0`, the object is deallocated.
+
+- ARC **cannot** detect retain cycles automatically.
+
+### Reference Types and ARC
+
+![Screenshot 2025-11-19 at 12 28 08 AM](https://github.com/user-attachments/assets/b7256b8c-7d5d-4eb8-929b-4f1dac1dbcc9)
+
+---
+
+## 4. Retain Cycles (Strong Reference Cycles)
+
+A **retain cycle** occurs when two objects hold strong references to each other, preventing ARC from deallocating them.
+
+```swift
+class Person {
+    var name: String
+    var apartment: Apartment?
+    init(name: String) { self.name = name }
+    deinit { print("\(name) is being deallocated") }
+}
+
+class Apartment {
+    var unit: String
+    var tenant: Person?
+    init(unit: String) { self.unit = unit }
+    deinit { print("Apartment \(unit) is being deallocated") }
+}
+
+var john: Person? = Person(name: "John")
+var unit1: Apartment? = Apartment(unit: "Unit 1")
+
+john!.apartment = unit1
+unit1!.tenant = john
+
+john = nil
+unit1 = nil
+// Neither object is deallocated due to retain cycle
+```
+
+
+### How to Avoid Retain Cycles
+
+Use **weak** or **unowned** references for one side of the relationship:
+
+```swift
+class Person {
+    var name: String
+    weak var apartment: Apartment?
+    init(name: String) { self.name = name }
+    deinit { print("\(name) is being deallocated") }
+}
+
+class Apartment {
+    var unit: String
+    var tenant: Person?
+    init(unit: String) { self.unit = unit }
+    deinit { print("Apartment \(unit) is being deallocated") }
+}
+
+var john: Person? = Person(name: "John")
+var unit1: Apartment? = Apartment(unit: "Unit 1")
+
+john!.apartment = unit1
+unit1!.tenant = john
+
+john = nil
+unit1 = nil
+// Both objects deallocated properly
+```
+
+
+---
+
+## 5. Closures and Reference Types
+
+- Closures capture **strong references** by default → may create retain cycles.
+
+- Avoid cycles using `[weak self]` or `[unowned self]`.
+
+```swift
+class ViewController {
+    var name = "MainVC"
+    lazy var printNameClosure: () -> Void = {
+        print(self.name) // strong reference to self
+    }
+}
+```
+
+
+**Fix using weak self:**
+
+```swift
+lazy var printNameClosure: () -> Void = { [weak self] in
+    guard let self = self else { return }
+    print(self.name)
+}
+```
+
+
+---
+
+## 6. When to Prefer Reference Types
+
+- **Shared mutable state**: Multiple references need to access and modify the same object.
+
+- **Inheritance**: Classes can subclass other classes.
+
+- **Lifetime management**: When deinitialization or cleanup is important.
+
+---
+
+## 7. Thread Safety
+
+- Reference types are **not thread-safe** by default.
+
+- Mutating the same instance from multiple threads can cause **race conditions**.
+
+- Use **DispatchQueue**, **actors**, or **locks** to ensure thread safety.
+
+---
+
+## 8. Performance Considerations
+
+- Reference types are allocated on the **heap**, slightly slower than stack-based value types.
+
+- Passing references is **cheap**, but modifying them may cause **side effects elsewhere**.
+
+---
+
+## Summary
+
+- Reference types are stored in the heap and managed by **ARC**.
+
+- **Strong references** increase the reference count; **weak** and **unowned** help avoid retain cycles.
+
+- Always check for retain cycles in **closures** or **bidirectional relationships**.
+
+- Prefer reference types for **shared state**, **inheritance**, or **deinitialization**.
+
+- Be mindful of **thread safety** and **performance trade-offs**.

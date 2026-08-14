@@ -1,0 +1,337 @@
+---
+title: "Memory Management in Swift: weak, strong, and unowned"
+description: "Swift uses Automatic Reference Counting (ARC) to manage memory."
+pubDate: 2026-08-14
+tags: ["Swift","Memory Management","ARC"]
+emoji: "💾"
+---
+
+Swift uses Automatic Reference Counting (ARC) to manage memory.
+ARC keeps track of how many references exist to each class instance.
+When there are no more references, ARC automatically frees the memory.
+
+- To control how ARC counts references, Swift provides three ownership types:
+![Screenshot 2025-11-12 at 10 59 33 AM](https://github.com/user-attachments/assets/316e4a4b-fafb-49bd-8490-a033af0e8478)
+
+# ⚙️ How ARC Works
+When you create a new object (instance of a class), ARC allocates memory for it and increases its reference count each time a strong reference is created.
+- Example:
+
+```
+class Person {
+    var name: String
+    init(name: String) {
+        self.name = name
+        print("\(name) initialized")
+    }
+    deinit {
+        print("\(name) deinitialized")
+    }
+}
+
+var person1: Person? = Person(name: "Marwa")
+var person2 = person1 // Reference count = 2
+person1 = nil         // Reference count = 1
+print(person1?.name) // prints "nil"
+print(person2?.name) // prints "Marwa"
+person2 = nil         // Reference count = 0 → deinit called
+print(person1?.name) // prints "nil"
+print(person2?.name) // prints "nil"
+```
+
+
+- 🧠 Final Output Summary
+
+```
+Marwa initialized
+nil
+Marwa
+Marwa deinitialized
+nil
+nil
+```
+
+
+✅ ARC automatically deallocates memory when no strong references remain.
+
+# 🧩 strong Reference (Default)
+By default, all properties and variables in Swift are strong references.
+
+- 📘 Example
+
+```
+class Teacher {
+    var student: Student?
+}
+
+class Student {
+    var teacher: Teacher?
+}
+```
+
+
+If both Teacher and Student hold strong references to each other, a retain cycle occurs — neither gets deallocated.
+- ❌ Problem: Retain Cycle
+
+```
+class Teacher {
+    var student: Student?
+    deinit { print("Teacher deinitialized") }
+}
+
+class Student {
+    var teacher: Teacher?
+    deinit { print("Student deinitialized") }
+}
+
+var teacher: Teacher? = Teacher()
+var student: Student? = Student()
+teacher?.student = student
+student?.teacher = teacher
+
+teacher = nil
+print(teacher?.student) // nil (teacher var is nil)
+print(student?.teacher) // not nil — still pointing to teacher instance
+
+student = nil // ❌ Neither deinit is called!
+print(teacher?.student) // nil (teacher var is nil)
+print(student?.teacher) // nil (student var is nil)
+```
+
+
+- ✅ Reference count summary:
+![Screenshot 2025-11-12 at 11 23 44 AM](https://github.com/user-attachments/assets/0ba97f68-cb50-4ee2-83b2-e0363ecb1da7)
+- Both variables are nil, but their referenced objects still exist in memory (they’re just not accessible anymore).
+
+**manually broken the retain cycle before setting the variables to nil:**
+
+```
+class Teacher {
+    var student: Student?
+    deinit { print("Teacher deinitialized") }
+}
+
+class Student {
+    var teacher: Teacher?
+    deinit { print("Student deinitialized") }
+}
+
+var teacher: Teacher? = Teacher()
+var student: Student? = Student()
+
+teacher?.student = student
+student?.teacher = teacher
+
+teacher?.student = nil
+student?.teacher = nil
+
+teacher = nil
+student = nil
+```
+
+
+# 💡 weak Reference
+A weak reference does not increase the reference count of the object it refers to.
+It’s declared using the weak keyword and must always be optional, since ARC can set it to nil automatically when the referenced object is deallocated.
+
+- ✅ When to Use weak
+To break retain cycles (especially in delegate patterns).
+When the referenced object can become nil during the object’s lifetime.
+  - 📘 Example
+
+```
+class Teacher {
+    var student: Student?
+}
+
+class Student {
+    weak var teacher: Teacher?
+}
+
+var teacher: Teacher? = Teacher()
+var student: Student? = Student()
+
+teacher?.student = student 
+student?.teacher = teacher
+
+teacher = nil -> teacher var nil so count of teacher is zero deinit called so student count in teacher reduse to 1
+//Teacher deinitialized
+print(student.teacher) // nil
+student = nil // ✅ Both deinit called properly
+Student deinitialized
+```
+
+
+- ✅ The weak reference prevents the retain cycle because it doesn’t keep the Teacher alive.
+
+# 🧩 unowned Reference
+unowned also does not increase the reference count, but unlike weak, it’s non-optional — it assumes the referenced object will always exist during its lifetime.
+
+- ✅ When to Use unowned
+  - To break retain cycles when one object must always have a reference to another that outlives it.
+  - Use when the referenced object will never become nil before the current object is deallocated.
+
+- ⚠️ Risk
+If the referenced object is deallocated and you access an unowned reference, the app will crash.
+
+- 📘 Example
+
+```
+class Owner {
+    var gadget: Gadget?
+    deinit { print("Owner deallocated") }
+}
+
+class Gadget {
+    unowned let owner: Owner
+    init(owner: Owner) {
+        self.owner = owner
+    }
+    deinit { print("Gadget deallocated") }
+}
+
+var owner: Owner? = Owner() //owner reference count 1
+var gadget = Gadget(owner: owner!) //gadget reference count 1 //owner reference count still 1
+owner?.gadget = gadget //gadget reference count 2 
+owner = nil //owner reference count 0 //gadget reference count 1
+// print(gadget.owner) will crash
+gadget = nil deinit called 
+```
+
+
+✅ unowned is safe here because the Owner always outlives the Gadget.
+
+## 🔁 Comparing weak vs unowned
+![Screenshot 2025-11-12 at 12 13 06 PM](https://github.com/user-attachments/assets/614eff4f-3969-44de-b51c-ec0d17c5105b)
+
+# 🧭 Common Use Cases
+- 1. Delegates
+Delegates should always be weak to prevent retain cycles.
+
+```
+protocol MyDelegate: AnyObject {
+    func didFinish()
+}
+
+class Worker {
+    weak var delegate: MyDelegate?
+}
+```
+
+
+- 2. Closures
+Closures capture variables strongly by default, which can cause retain cycles.
+  - Use [weak self] or [unowned self] inside closures to prevent that.
+
+```
+class NetworkManager {
+    func fetchData(completion: @escaping () -> Void) {
+        // Some async code
+    }
+}
+
+class ViewModel {
+    var manager = NetworkManager()
+    
+    func loadData() {
+        manager.fetchData { [weak self] in
+            self?.updateUI()
+        }
+    }
+    
+    func updateUI() {
+        print("UI Updated")
+    }
+}
+```
+
+
+- ✅ [weak self] avoids retain cycles between ViewModel and the closure.
+
+### 🧠 Visual Summary
+🧩 Strong Reference
+
+```
+A ---> B
+A holds B strongly (ARC count +1)
+B won’t deallocate until A releases it.
+```
+
+
+🧩 Weak Reference
+
+```
+A - - - > B
+A holds B weakly (ARC count not affected)
+B can deallocate anytime (A’s pointer becomes nil)
+```
+
+
+🧩 Unowned Reference
+
+```
+A --x--> B
+A holds B unowned (ARC count not affected)
+B must outlive A, or crash occurs
+```
+
+
+# 🔁 What Is a Retain Cycle?
+A retain cycle (also called a strong reference cycle) happens when two or more objects hold strong references to each other, preventing their reference counts from ever reaching zero.
+As a result, their deinit is never called, and memory leaks occur.
+
+- 📘 Example of a Retain Cycle
+
+```
+class Teacher {
+    var student: Student?
+    deinit { print("Teacher deallocated") }
+}
+
+class Student {
+    var teacher: Teacher?
+    deinit { print("Student deallocated") }
+}
+
+var teacher: Teacher? = Teacher()
+var student: Student? = Student()
+
+teacher?.student = student
+student?.teacher = teacher
+
+teacher = nil
+student = nil
+```
+
+
+- ❌ What happens:
+  - Teacher and Student hold strong references to each other.
+  - Even after setting both variables to nil, each still has a strong reference to the other.
+  - Their reference counts never reach 0, so:
+  - deinit is never called.
+  - Both objects stay in memory forever (memory leak).
+
+## 🕵️ How to Detect Retain Cycles
+You can detect retain cycles in two main ways:
+- 🔹 1. Manual Observation
+  - Add deinit print statements in your classes:
+  - deinit \{ print("Object deinitialized") \}
+  - If deinit is never printed, there’s likely a retain cycle.
+
+- 🔹 2. Using Xcode Tools
+🧰 Instruments → Leaks or Allocations
+   - In Xcode, choose Product → Profile (⌘I).
+   - Select “Leaks” or “Allocations”.
+   - Run your app.
+   - Perform actions that create and release objects.
+   - If the object count keeps increasing or leaks appear, you might have a retain cycle.
+
+🧠 Tip:
+You can click “Cycle” in the Instruments’ Leaks pane to see which objects reference each other.
+
+- 3. Using Third-Party Tools
+If you’re debugging complex apps, tools like:
+  - Facebook’s [FBRetainCycleDetector](https://github.com/facebook/FBRetainCycleDetector)
+  - LeakCanary (for Android)
+
+can automatically analyze your heap and detect strong reference cycles.

@@ -1,0 +1,292 @@
+---
+title: "Uploading Multiple Images in Parallel"
+description: "func uploadImage(_ image: UIImage) -> AnyPublisher<String, Error> {"
+pubDate: 2026-08-14
+tags: ["Swift","Networking","Concurrency"]
+emoji: "🖼️"
+---
+
+- You need to:
+  - Upload multiple images to a server.
+  - Wait until all uploads complete.
+  - Call an update API with all resulting URLs.
+- Challenges:
+  - Number of images can be dynamic (not fixed).
+  - Some APIs may limit concurrent uploads.
+  - You want to explore Combine operators and async/await approaches.
+
+Upload & Update Functions (Simulated)
+
+```
+func uploadImage(_ image: UIImage) -> AnyPublisher<String, Error> {
+    Future<String, Error> { promise in
+        DispatchQueue.global().asyncAfter(deadline: .now() + 1) {
+            let url = "https://server.com/image/\(UUID().uuidString).jpg"
+            promise(.success(url))
+        }
+    }
+    .eraseToAnyPublisher()
+}
+
+func updateProfile(with urls: [String]) -> AnyPublisher<Void, Error> {
+    Future<Void, Error> { promise in
+        print("✅ Update profile with URLs:", urls)
+        promise(.success(()))
+    }
+    .eraseToAnyPublisher()
+}
+```
+
+
+## MergeMany — Dynamic, Parallel
+
+```
+let uploads = images.map { uploadImage($0) }
+
+Publishers.MergeMany(uploads)
+    .collect() // Wait for all uploads
+    .flatMap { urls in updateProfile(with: urls) }
+    .sink(
+        receiveCompletion: { print("Completed:", $0) },
+        receiveValue: { print("Profile updated!") }
+    )
+    .store(in: &cancellables)
+```
+
+
+- ✅ Works with any number of images
+- ✅ Runs all uploads concurrently
+- ✅ Collects results before calling the update API
+
+## FlatMap — Dynamic, Parallel
+
+```
+images.publisher
+    .flatMap { image in uploadImage(image) } // all uploads start immediately
+    .collect()
+    .flatMap { urls in updateProfile(with: urls) }
+    .sink(
+        receiveCompletion: { print("Completed:", $0) },
+        receiveValue: { print("Profile updated!") }
+    )
+    .store(in: &cancellables)
+```
+
+
+- ✅ Works with dynamic number of images
+- ✅ Collects all results with collect()
+- ✅ Can also use flatMap(maxPublishers: .max(2)) to limit concurrency
+
+## Zip — Fixed Number Only
+
+```
+uploadImage(images[0])
+    .zip(uploadImage(images[1]),
+         uploadImage(images[2]),
+         uploadImage(images[3]),
+         uploadImage(images[4]))
+    .flatMap { (url1, url2, url3, url4, url5) in
+        updateProfile(with: [url1, url2, url3, url4, url5])
+    }
+    .sink(receiveCompletion: { print($0) },
+          receiveValue: { print("All uploads done!") })
+    .store(in: &cancellables)
+```
+
+
+- ❌ Only works for fixed number of images
+- ✅ Waits until all uploads finish before emitting
+
+## CombineLatest — Fixed Number, Reactive
+
+```
+uploadImage(images[0])
+    .combineLatest(uploadImage(images[1]),
+                   uploadImage(images[2]),
+                   uploadImage(images[3]),
+                   uploadImage(images[4]))
+    .flatMap { urls in
+        updateProfile(with: [urls.0, urls.1, urls.2, urls.3, urls.4])
+    }
+    .sink(receiveCompletion: { print($0) },
+          receiveValue: { print("Profile updated (combineLatest)!") })
+    .store(in: &cancellables)
+```
+
+
+- ✅ Emits latest values whenever any upload completes
+- ❌ Only works for fixed number of images
+
+# Async/Await — Modern Swift
+## async let (fixed number)
+
+```
+async let url1 = uploadImage(images[0])
+async let url2 = uploadImage(images[1])
+async let url3 = uploadImage(images[2])
+
+do {
+    let urls = try await [url1, url2, url3]
+    try await updateProfile(with: urls)
+} catch {
+    print("❌ Upload or update failed:", error)
+}
+```
+
+
+## TaskGroup (dynamic, scalable)
+
+```
+let urls = try await withThrowingTaskGroup(of: String.self) { group in
+    for image in images {
+        group.addTask { try await uploadImage(image) }
+    }
+
+    var collected: [String] = []
+    for try await url in group {
+        collected.append(url)
+    }
+    return collected
+}
+
+try await updateProfile(with: urls)
+```
+
+
+- Handles any number of images
+- Supports parallel execution and structured concurrency
+- Can easily cancel tasks or handle errors
+
+# Limiting Concurrency (Optional)
+## Combine
+
+```
+images.publisher
+    .flatMap(maxPublishers: .max(2)) { uploadImage($0) } // max 2 at a time
+    .collect()
+    .flatMap { updateProfile(with: $0) }
+    .sink(receiveCompletion: { print($0) }, receiveValue: { print("Done!") })
+    .store(in: &cancellables)
+```
+
+
+## Async/Await
+
+```
+let semaphore = DispatchSemaphore(value: 2) // max 2 concurrent
+
+let urls = try await withThrowingTaskGroup(of: String.self) { group in
+    for image in images {
+        group.addTask {
+            semaphore.wait()
+            defer { semaphore.signal() }
+            return try await uploadImage(image)
+        }
+    }
+
+    var results: [String] = []
+    for try await url in group {
+        results.append(url)
+    }
+    return results
+}
+
+try await updateProfile(with: urls)
+```
+
+
+- ✅ Controls concurrent uploads
+- ✅ Avoids overloading API or network
+
+# Solution Using DispatchGroup and DispatchSemaphore
+- Upload and Update API (Simulated)
+
+```
+func uploadImage(_ image: UIImage, completion: @escaping (Result<String, Error>) -> Void) {
+    DispatchQueue.global().asyncAfter(deadline: .now() + 1) {
+        let url = "https://server.com/image/\(UUID().uuidString).jpg"
+        completion(.success(url))
+    }
+}
+
+func updateProfile(with urls: [String], completion: @escaping (Bool) -> Void) {
+    DispatchQueue.global().asyncAfter(deadline: .now() + 0.5) {
+        print("Profile updated with URLs:", urls)
+        completion(true)
+    }
+}
+```
+
+
+## With Unlimited Concurrency
+
+```
+let dispatchGroup = DispatchGroup()
+var uploadedURLs: [String] = []
+let queue = DispatchQueue.global()
+
+for image in images {
+    dispatchGroup.enter()
+    queue.async {
+        uploadImage(image) { result in
+            switch result {
+            case .success(let url):
+                uploadedURLs.append(url)
+            case .failure(let error):
+                print("Upload failed:", error)
+            }
+            dispatchGroup.leave()
+        }
+    }
+}
+
+dispatchGroup.notify(queue: .main) {
+    updateProfile(with: uploadedURLs) { success in
+        print("All uploads finished, profile updated!")
+    }
+}
+```
+
+
+- Starts all uploads immediately
+- Uses DispatchGroup to wait for completion
+- Suitable when concurrency is not a concern
+
+## With Concurrency Limit (Max 2 at a Time)
+
+```
+let dispatchGroup = DispatchGroup()
+let semaphore = DispatchSemaphore(value: 2) // max 2 concurrent uploads
+var uploadedURLs: [String] = []
+let queue = DispatchQueue.global()
+
+for image in images {
+    semaphore.wait() // wait if 2 uploads are already running
+    dispatchGroup.enter()
+    queue.async {
+        uploadImage(image) { result in
+            defer {
+                semaphore.signal() // free up a slot
+                dispatchGroup.leave()
+            }
+            switch result {
+            case .success(let url):
+                uploadedURLs.append(url)
+            case .failure(let error):
+                print("Upload failed:", error)
+            }
+        }
+    }
+}
+
+dispatchGroup.notify(queue: .main) {
+    updateProfile(with: uploadedURLs) { success in
+        print("All uploads finished, profile updated!")
+    }
+}
+```
+
+
+- Limits concurrent uploads to 2
+- Uses DispatchSemaphore to control the concurrency
+- Works for dynamic number of images

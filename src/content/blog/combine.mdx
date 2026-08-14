@@ -1,0 +1,398 @@
+---
+title: "Combine Framework in Depth"
+description: "Combine is Apple’s reactive programming framework used to handle asynchronous events by combining event streams. It is heavily used with networking…"
+pubDate: 2026-08-14
+tags: ["Swift","Combine","Reactive"]
+emoji: "🔀"
+---
+
+## 1. Introduction to Combine
+
+Combine is Apple’s reactive programming framework used to handle asynchronous events by combining event streams. It is heavily used with networking, timers, notifications, CoreData, SwiftUI bindings, and more.
+
+---
+
+## 2. Core Concepts Overview
+
+Combine is built on three main actors:
+
+- **Publishers** – Emit values over time.
+
+- **Operators** – Transform, filter, combine, or manipulate emitted values.
+
+- **Subscribers** – Receive and react to the final output.
+
+- **Subscriptions** – The connection between a publisher and subscriber.
+
+- **Cancellables** – Objects you store to cancel subscriptions.
+
+---
+
+## 3. Publishers
+
+Publishers are the source of data. They emit sequences of values over time, either **successfully** or with a **failure**.
+
+### Common Publishers
+
+- **Just** – Emits one value and finishes.
+
+- **Future** – Emits one value at a later time.
+
+- **PassthroughSubject** – Emits values manually.
+
+- **CurrentValueSubject** – Emits the current value + new values.
+
+- **Deferred** – Creates the publisher only when subscribed.
+
+- **Timer.publish** – Emits timer-based values.
+
+- **NotificationCenter.Publisher** – Emits notifications.
+
+- **URLSession.DataTaskPublisher** – Emits network responses.
+
+### Example
+
+```swift
+let publisher = [1, 2, 3].publisher
+```
+
+
+---
+
+## 4. Subscribers
+
+A subscriber receives values from a publisher.
+
+### Main Subscriber Types
+
+- **sink(receiveValue:)** → Most common.
+
+- **sink(receiveCompletion:receiveValue:)** → Handles completion.
+
+- **assign(to:on:)** → Assigns output to a property.
+
+- **Custom Subscribers** (conforming to `Subscriber`).
+
+### Example
+
+```swift
+publisher
+    .sink { value in
+        print(value)
+    }
+```
+
+
+---
+
+## 5. Subscriptions
+
+When a publisher attaches to a subscriber, a **Subscription** is created.
+
+Subscriptions:
+
+- Control data flow.
+
+- Allow backpressure management.
+
+- Are stored using `AnyCancellable`.
+
+### Example
+
+```swift
+var cancellable = publisher.sink { print($0) }
+```
+
+
+---
+
+## 6. Cancellables
+
+These are used to cancel an active Combine subscription.
+
+### Common Storage Pattern
+
+```swift
+class ViewModel {
+    private var cancellables = Set<AnyCancellable>()
+
+    func load() {
+        publisher
+            .sink { print($0) }
+            .store(in: &cancellables)
+    }
+}
+```
+
+
+---
+
+## 7. Operators
+
+Operators transform values coming from publishers.
+
+There are **over 50 operators** categorized into groups.
+
+### 7.1 Transforming Operators
+
+- `map` – Transform values.
+
+- `tryMap` – Throw inside mapping.
+
+- `flatMap` – Turn values into other publishers.
+
+### 7.2 Filtering Operators
+
+- `filter` – Remove values if condition fails.
+
+- `compactMap` – Remove nil + unwrap.
+
+- `removeDuplicates` – Skip repeated values.
+
+- `debounce` – Wait before emitting.
+
+- `throttle` – Emit at fixed intervals.
+
+### 7.3 Combining Operators
+
+- `zip` – Combine pair of values.
+
+- `combineLatest` – Emit when any publisher emits.
+
+- `merge` – Combine streams.
+
+### 7.4 Handling Errors
+
+- `catch` – Replace error.
+
+- `retry` – Try again.
+
+- `replaceError` – Emit fallback value.
+
+### 7.5 Sequence Operators
+
+- `collect` – Collect values into an array.
+
+- `scan` – Accumulate values.
+
+### Example
+
+```swift
+publisher
+    .map { $0 * 10 }
+    .filter { $0 > 10 }
+    .sink { print($0) }
+```
+
+
+---
+
+## 8. Subjects
+
+Subjects are special publishers that allow manual value emission.
+
+### Types
+
+- **PassthroughSubject** – Only new values.
+
+- **CurrentValueSubject** – Stores & emits latest value.
+
+### Example
+
+```swift
+let subject = PassthroughSubject<String, Never>()
+subject.send("Hello")
+```
+
+
+---
+
+## 9. Backpressure
+
+Combine supports a system where subscribers request the amount of data they can handle.
+
+- Subscribers can request **unlimited** or **specific** values.
+
+- Prevents overwhelming slow consumers.
+
+---
+
+## 10. Error Handling in Combine
+
+Three main patterns:
+
+### 1. Replace the error
+
+```swift
+publisher
+    .replaceError(with: 0)
+```
+
+
+### 2. Catch the error and switch publishers
+
+```swift
+publisher
+    .catch { _ in Just(0) }
+```
+
+
+### 3. Retry
+
+```swift
+publisher
+    .retry(3)
+```
+
+
+---
+
+## 11. Scheduling & Threading
+
+Combine integrates with dispatch queues.
+
+### Key operators
+
+- `subscribe(on:)` – Where work is done.
+
+- `receive(on:)` – Where values are delivered.
+
+Example:
+
+```swift
+publisher
+    .subscribe(on: backgroundQueue)
+    .receive(on: RunLoop.main)
+```
+
+
+---
+
+## 12. Combine with SwiftUI (Most Common Use Case)
+
+SwiftUI integrates deeply with Combine.
+
+### Common Patterns
+
+- Using `@Published` in ViewModel.
+
+- Using `ObservableObject`.
+
+- Automatically updating UI when published values change.
+
+Example ViewModel:
+
+```swift
+class MoviesViewModel: ObservableObject {
+    @Published var movies: [Movie] = []
+    private var cancellables = Set<AnyCancellable>()
+
+    func loadMovies() {
+        movieService.fetch()
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$movies)
+    }
+}
+```
+
+
+---
+
+## 13. Memory Management
+
+- Combine retains subscriptions until cancelled.
+
+- Use `store(in:)` to manage lifecycle.
+
+- Avoid retain cycles using `[weak self]`.
+
+Example:
+
+```swift
+publisher
+    .sink { [weak self] value in
+        self?.handle(value)
+    }
+    .store(in: &cancellables)
+```
+
+
+---
+
+## 14. Combine Patterns in iOS Architecture
+
+### Common Use Cases
+
+- Networking pipeline
+
+- Form validation
+
+- Search debounce
+
+- Real-time UI updates
+
+- API chaining with `flatMap`
+
+- Data transformation between layers
+
+---
+
+## 15. Debugging Combine
+
+Use:
+
+- `print()` operator
+
+- `handleEvents` for side effects
+
+- Xcode Combine Debugger (in newer versions)
+
+Example:
+
+```swift
+publisher
+    .handleEvents(receiveOutput: { print("Output: \($0)") })
+```
+
+
+---
+
+## 16. When to Use Combine
+
+Use Combine when you need:
+
+- Asynchronous pipelines
+
+- Data streams
+
+- Declarative transformations
+
+- Integration with SwiftUI
+
+- Reactive patterns in ViewModels
+
+Avoid when:
+
+- Task-based async/await is simpler
+
+- You need easier debugging
+
+- The operation is one-time and doesn’t need streaming
+
+---
+
+## 17. Combine vs Async/Await
+
+Feature | Combine | async/await
+-- | -- | --
+Streams of values | ✔️ | ➖ (needs AsyncStream)
+Declarative transformations | ✔️ | ➖
+Simpler syntax | ➖ | ✔️
+Integration with SwiftUI | ✔️ | Medium
+Error handling | Complex | Simple
+
+---
+
+## 18. Conclusion
+
+Combine is extremely powerful for building reactive, asynchronous pipelines especially when dealing with **streams of values**, **UI bindings**, **network requests**, and **complex transformations**.

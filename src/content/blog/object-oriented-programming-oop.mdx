@@ -1,0 +1,184 @@
+---
+title: "Object-Oriented Programming (OOP)"
+description: "Object-Oriented Programming (OOP) is a programming paradigm based on the concept of objects — entities that combine data (properties) and behavior…"
+pubDate: 2026-08-14
+tags: ["Swift","OOP"]
+emoji: "🧱"
+---
+
+Object-Oriented Programming (OOP) is a programming paradigm based on the concept of objects — entities that combine data (properties) and behavior (methods).
+Swift supports OOP as well as Protocol-Oriented Programming (POP), giving developers flexibility to structure their code in a clean and reusable way.
+
+#### Class
+A class is a blueprint that defines properties and methods shared by objects.
+
+```
+class Vehicle {
+    var brand: String
+    var speed: Int
+    
+    init(brand: String, speed: Int) {
+        self.brand = brand
+        self.speed = speed
+    }
+    
+    func drive() {
+        print("\(brand) is moving at \(speed) km/h")
+    }
+}
+```
+
+
+You can create an object (instance) of this class:
+
+```
+let car = Vehicle(brand: "Toyota", speed: 120)
+car.drive() // Toyota is moving at 120 km/h
+```
+
+
+#### Object
+An object is an instance of a class — a concrete representation of the blueprint.
+
+Each object:
+- Has its own state (values of properties).
+- Can perform actions (methods).
+
+# 🧩 Core Concepts of OOP
+OOP in Swift is built on four main principles:
+![Screenshot 2025-11-11 at 7 42 13 PM](https://github.com/user-attachments/assets/4531aef4-ac7d-43a4-92ea-18237596f10b)
+
+## 🔒 1. Encapsulation
+Encapsulation helps protect data inside an object by restricting direct access.
+- It’s implemented in Swift using access control:
+![Screenshot 2025-11-11 at 7 57 28 PM](https://github.com/user-attachments/assets/79b6a432-716f-4cab-b9a9-3f023e095eaf)
+
+```
+class BankAccount {
+    private var balance: Double = 0.0  // Hidden from outside
+
+    func deposit(_ amount: Double) {
+        balance += amount
+    }
+
+    func withdraw(_ amount: Double) {
+        if amount <= balance {
+            balance -= amount
+        }
+    }
+
+    func getBalance() -> Double {
+        return balance
+    }
+}
+```
+
+
+✅ The balance is private and can’t be modified directly.
+The only way to change it is through controlled method
+
+## Abstraction
+
+Abstraction hides complex implementation details, exposing only what’s necessary through protocols or abstract classes.
+
+```
+protocol Shape {
+    func area() -> Double
+}
+
+class Circle: Shape {
+    private let radius: Double
+
+    init(radius: Double) {
+        self.radius = radius
+    }
+
+    func area() -> Double {
+        return Double.pi * radius * radius
+    }
+}
+```
+
+
+✅ The user only cares about calling area(), not how it’s calculated.
+
+## 🧬 3. Inheritance
+Inheritance allows you to reuse and extend functionality from another class.
+
+```
+class Vehicle {
+    func start() {
+        print("Vehicle started")
+    }
+}
+
+class Car: Vehicle {
+    func honk() {
+        print("Car honked")
+    }
+}
+
+let car = Car()
+car.start() // Inherited from Vehicle
+car.honk()  // Defined in Car
+```
+
+
+✅ Car inherits behavior from Vehicle and can add its own
+
+## 🌀 4. Polymorphism
+Polymorphism allows one interface to represent multiple data types.
+In Swift, it’s achieved through method overriding and protocol conformance.
+
+```
+class Animal {
+    func makeSound() {
+        print("Some sound")
+    }
+}
+
+class Dog: Animal {
+    override func makeSound() {
+        print("Woof!")
+    }
+}
+
+class Cat: Animal {
+    override func makeSound() {
+        print("Meow!")
+    }
+}
+
+let animals: [Animal] = [Dog(), Cat()]
+animals.forEach { $0.makeSound() }
+```
+
+
+✅ The same function makeSound() behaves differently depending on the object type.
+
+# 🧩 Advantages of OOP in Swift
+- ✅ Code reuse through inheritance.
+- ✅ Modularity — easy to maintain and extend.
+- ✅ Encapsulation for better data security.
+- ✅ Polymorphism allows flexibility and scalability.
+
+# ⚠️ Disadvantages
+- ❌ Can lead to tight coupling if overused.
+- ❌ Inheritance hierarchies may become complex.
+- ❌ Not always ideal for performance-critical or functional tasks.
+
+# 🧭 Best Practices
+- Keep classes small and focused (follow Single Responsibility Principle).
+- Prefer composition over inheritance.
+- Use protocols to decouple dependencies.
+- Use structs for lightweight, value-based models.
+- Combine OOP with Protocol-Oriented Programming (POP) when possible.
+
+# 🧠 OOP vs POP (Protocol-Oriented Programming)
+Swift encourages both OOP and POP.
+Here’s how they differ
+![Screenshot 2025-11-11 at 8 12 11 PM](https://github.com/user-attachments/assets/d708b0ca-46e8-4225-b404-ade7d7b9d546)
+
+✅ Tip:
+- Use OOP when you need stateful objects or UIKit/AppKit integration.
+- Use POP when you want composition, testability, and lightweight abstraction.

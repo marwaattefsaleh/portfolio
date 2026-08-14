@@ -1,0 +1,165 @@
+---
+title: "Thread-Safe Access and Mutation of Singleton Properties"
+description: "Even if your singleton instance is thread-safe (via static let), its properties can still be modified from multiple threads at the same time, causi…"
+pubDate: 2026-08-14
+tags: ["Swift","Concurrency","Design Patterns"]
+emoji: "🔐"
+---
+
+Even if your singleton instance is thread-safe (via static let), its properties can still be modified from multiple threads at the same time, causing race conditions or inconsistent state.
+
+- 1️⃣ Example of Unsafe Mutation
+
+```
+class NetworkManager {
+    static let shared = NetworkManager()
+    private init() {}
+
+    var apiToken: String?  // mutable property
+}
+```
+
+
+**Problem:**
+
+```
+DispatchQueue.global().async {
+    NetworkManager.shared.apiToken = "Token1"
+}
+
+DispatchQueue.global().async {
+    NetworkManager.shared.apiToken = "Token2"
+}
+```
+
+
+ - Two threads write to apiToken at the same time.
+ - Result is undefined — you could end up with "Token1" or "Token2" or even a corrupted value.
+
+⚠️ Singleton is thread-safe, but its mutable property is not.
+
+# Solution 1: Use a Serial Dispatch Queue
+
+```
+class NetworkManager {
+    static let shared = NetworkManager()
+    private init() {}
+
+    private let queue = DispatchQueue(label: "com.app.networkManagerQueue")
+    private var _apiToken: String?
+
+    var apiToken: String? {
+        get {
+            return queue.sync { _apiToken }
+        }
+        set {
+            queue.sync { _apiToken = newValue }
+        }
+    }
+}
+```
+
+
+- ✅ How it works:
+  - All reads/writes go through the serial queue.
+  - Only one thread at a time can read/write _apiToken.
+  - Thread-safe and deterministic.
+
+# Solution 2: Use actor (Swift Concurrency, iOS 15+)
+Actors are reference types that isolate state for concurrency.
+
+```
+actor NetworkManager {
+    static let shared = NetworkManager()
+    
+    private var apiToken: String?
+
+    func setToken(_ token: String) {
+        apiToken = token
+    }
+
+    func getToken() -> String? {
+        return apiToken
+    }
+}
+```
+
+
+- Usage:
+
+```
+Task {
+    await NetworkManager.shared.setToken("Token1")
+    let token = await NetworkManager.shared.getToken()
+    print(token)
+}
+```
+
+
+- ✅ **Benefits**:
+  - Automatic thread-safety for all properties inside the actor.
+  - Avoids manual queues and locks.
+  - Modern, recommended approach for Swift 5.5+.
+
+# Solution 3: Use Locks
+
+```
+class NetworkManager {
+    static let shared = NetworkManager()
+    private init() {}
+
+    private var _apiToken: String?
+    private let lock = NSLock()
+
+    var apiToken: String? {
+        get {
+            lock.lock()
+            defer { lock.unlock() }
+            return _apiToken
+        }
+        set {
+            lock.lock()
+            _apiToken = newValue
+            lock.unlock()
+        }
+    }
+}
+```
+
+
+- Works, but more verbose than serial queue or actor.
+- You have to be careful with deadlocks.
+
+# Solution 4: Use DispatchSemaphore
+What it is:
+- A counting semaphore from GCD (Grand Central Dispatch).
+- Can be used to limit access to a resource by a certain number of threads.
+- Often used for synchronization in concurrent queues.
+
+  - Example (binary semaphore = lock):
+
+```
+class NetworkManager {
+    static let shared = NetworkManager()
+    private init() {}
+
+    private var _apiToken: String?
+    private let semaphore = DispatchSemaphore(value: 1)
+
+    var apiToken: String? {
+        get {
+            semaphore.wait()
+            defer { semaphore.signal() }
+            return _apiToken
+        }
+        set {
+            semaphore.wait()
+            _apiToken = newValue
+            semaphore.signal()
+        }
+    }
+}
+```
+
+
+![Screenshot 2025-11-12 at 1 47 30 PM](https://github.com/user-attachments/assets/4bd2c936-8d8f-4a6e-ac3b-c9028bdb2c09)

@@ -1,0 +1,151 @@
+---
+title: "Concurrency in iOS"
+description: "Concurrency is the ability of your app to execute multiple tasks at the same time. In iOS development, proper use of concurrency improves app respo…"
+pubDate: 2026-08-14
+tags: ["Swift","Concurrency"]
+emoji: "⚙️"
+---
+
+Concurrency is the ability of your app to execute multiple tasks at the same time. In iOS development, proper use of concurrency improves app responsiveness, performance, and user experience.
+
+# What is Concurrency?
+- Concurrency allows your app to perform multiple tasks at the same time without blocking the main thread.
+- Parallelism is a type of concurrency where tasks truly run at the same time on multiple cores.
+- In iOS, the main thread (UI thread) must remain responsive, so long-running operations should run on background threads.
+
+**It's important to distinguish concurrency from parallelism:**
+
+Concurrency: Multiple tasks are in progress and their execution is interleaved. They may or may not run at the exact same time.
+Parallelism: Multiple tasks actually execute simultaneously on different CPU cores.
+
+For example, an app can download data while the user scrolls a list. That's concurrency. On a multi-core device, those operations may also run in parallel.
+
+Example of a blocking task (bad):
+
+```
+// Blocking main thread
+func fetchData() {
+    let data = try! Data(contentsOf: URL(string: "https://example.com")!)
+    print(data)
+}
+```
+
+
+This freezes the UI until the data is fetched.
+
+# Concurrency Tools in iOS
+## Grand Central Dispatch (GCD)
+- Low-level API for managing queues and executing tasks asynchronously.
+
+- Types of queues:
+  - Main queue → serial queue on main thread (UI updates).
+  - Global queue → concurrent background queues.
+  - Custom queue → serial or concurrent queue you create.
+
+- Example:
+
+```
+DispatchQueue.global(qos: .background).async {
+    let data = fetchDataFromNetwork()
+    
+    DispatchQueue.main.async {
+        self.updateUI(with: data)
+    }
+}
+```
+
+
+## Operation & OperationQueue
+- Higher-level abstraction over GCD.
+- Supports dependencies between operations, cancellation, and priorities.
+
+- Example:
+
+```
+let queue = OperationQueue()
+
+let operation1 = BlockOperation {
+    print("Task 1")
+}
+
+let operation2 = BlockOperation {
+    print("Task 2")
+}
+operation2.addDependency(operation1) // Task 2 waits for Task 1
+
+queue.addOperations([operation1, operation2], waitUntilFinished: false)
+```
+
+
+## Swift Concurrency (async/await)
+- Introduced in Swift 5.5 for structured concurrency.
+- Allows writing asynchronous code that looks synchronous, improving readability.
+
+- Example:
+
+```
+func fetchData() async throws -> Data {
+    let url = URL(string: "https://example.com")!
+    let (data, _) = try await URLSession.shared.data(from: url)
+    return data
+}
+
+Task {
+    do {
+        let data = try await fetchData()
+        self.updateUI(with: data)
+    } catch {
+        print("Error: \(error)")
+    }
+}
+```
+
+
+- Benefits:
+  - Structured concurrency → tasks are scoped and cancellable.
+  - Built-in support for async let for parallel tasks.
+
+## Actors
+- Introduced in Swift 5.5 to protect mutable shared state.
+- Guarantees that only one task can access the actor’s state at a time.
+
+- Example:
+
+```
+actor BankAccount {
+    private var balance: Int = 0
+    
+    func deposit(amount: Int) {
+        balance += amount
+    }
+    
+    func getBalance() -> Int {
+        return balance
+    }
+}
+
+let account = BankAccount()
+
+Task {
+    await account.deposit(amount: 100)
+    let balance = await account.getBalance()
+    print(balance)
+}
+```
+
+
+# Common Concurrency Patterns in iOS
+- Background Work + UI Update
+  - Perform heavy tasks on background threads, update UI on main thread.
+- Parallel Tasks
+  - Execute multiple independent tasks in parallel using async let or DispatchGroup.
+- Serializing Access to Shared State
+  - Use serial queues or actors to prevent race conditions.
+- Task Cancellation
+  - use structured concurrency or OperationQueue for cancelable task
+
+# Challenges in Concurrency
+- **Race Conditions** → simultaneous access to shared resources causing unexpected results.
+- **Deadlocks** → two or more threads waiting on each other indefinitely.
+- **Thread Explosion** → creating too many threads leads to performance degradation.
+- **UI Thread Blocking** → performing long tasks on main thread freezes the app.

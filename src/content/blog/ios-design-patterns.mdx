@@ -1,0 +1,464 @@
+---
+title: "iOS Design Patterns"
+description: "Comprehensive guide covering classic design patterns, their intent, flow diagrams, iOS/Swift real examples, and implementation snippets."
+pubDate: 2026-08-14
+tags: ["Design Patterns","Architecture"]
+emoji: "🏗️"
+---
+
+Comprehensive guide covering classic design patterns, their intent, flow diagrams, iOS/Swift real examples, and implementation snippets.
+![Screenshot 2025-11-24 at 9 54 11 AM](https://github.com/user-attachments/assets/3247f192-6f90-44c4-a405-a2de726d1975)
+
+# 🧩 Creational Design Patterns
+Creational patterns focus on object creation, controlling how objects are constructed and instantiated.
+---
+##  **Singleton Pattern**
+
+### **Intent**
+
+Ensure only one instance of a class exists and provide a global access point.
+
+### **UML Flow**
+
+```
++--------------+
+|  Singleton   |
++--------------+
+| instance     |◄───────── ensure only one instance
++--------------+
+| shared()     |
++--------------+
+```
+
+
+### **When to Use**
+
+* Shared resources (e.g., UserDefaults, API clients, Session managers).
+
+### **iOS Example**
+
+```swift
+final class NetworkManager {
+    static let shared = NetworkManager()
+    private init() {}
+}
+```
+
+
+---
+## **Factory Pattern**
+
+### **Intent**
+
+Create objects without exposing creation logic.
+
+### **UML Flow**
+
+```
+Client(Creator) → Factory → Concrete Product
+```
+
+
+### **When to Use**
+
+* Creating objects with complex initialization.
+* Switching behavior based on configuration.
+
+### **iOS Example**
+
+```swift
+protocol ScreenFactory {
+    func makeMovieDetails() -> UIViewController
+}
+---
+protocol Payment { func pay() }
+class Visa: Payment { func pay() {} }
+class PayPal: Payment { func pay() {} }
+
+struct PaymentFactory {
+    static func make(_ type: String) -> Payment {
+        type == "visa" ? Visa() : PayPal()
+    }
+}
+
+```
+
+
+---
+##  **Builder Pattern**
+
+### **Intent**
+
+Construct objects step by step, especially when initialization is complex.
+
+### **Flow**
+
+```
+Director → Builder → Product
+```
+
+
+### **Example**
+Used often for
+- URLRequest configuration.
+- Creating complex view setups
+- Creating JSON request bodies
+
+```swift
+let builder = URLRequestBuilder()
+    .set(method: .get)
+    .set(url: "/movies")
+    .addHeader(key: "Auth", value: token)
+```
+
+
+# Prototype
+Create clones of registered objects.
+
+- Use Case
+  - Deep copy of models
+  - Reusable templates
+---
+# Structural Design Patterns
+Structural patterns focus on how objects are composed.
+---
+##  **Adapter Pattern**
+
+### **Intent**
+
+Convert one interface into another.
+
+### **Flow**
+
+```
+Client → Adapter → Adaptee
+```
+
+
+- Use Case
+  - Wrapping an old API to work with new code
+  - Convert JSON into your app model
+
+### **iOS Example**
+
+```swift
+class LegacyAPI {
+    func fetch() {}
+}
+
+protocol DataProvider {
+    func loadData()
+}
+
+class LegacyAdapter: DataProvider {
+    private let legacy = LegacyAPI()
+    func loadData() { legacy.fetch() }
+}
+```
+
+
+---
+##  **Repository Pattern**
+
+### **Intent**
+
+Abstract data source (local/cache/remote).
+
+### **Flow**
+
+```
+ViewModel → Repository → (Local/Remote/Data sources)
+```
+
+
+### **Example**
+
+Used already in your movie app structure.
+
+---
+##  **Decorator Pattern**
+
+### **Intent**
+
+Add behavior dynamically.(Add responsibilities dynamically without subclassing.)
+
+### **Flow**
+
+```
+Component → Decorator → Behavior
+```
+
+
+### **Example**
+
+Middleware around API calls (retry, token refresh, logging).
+
+---
+##  **Facade Pattern**
+
+### **Intent**
+
+Simplify a complex subsystem with a unified interface.
+
+- Use Case
+  - A PhotoManager that hides AVFoundation complexity
+  - A StorageManager that hides UserDefaults + Keychain + Files
+
+### **Example**
+
+A class that wraps Core Data stack.
+
+---
+# Composite
+Treat individual objects and groups uniformly.
+
+- Use Case
+  - Filesystem style structure
+  - SwiftUI View hierarchy
+
+- Diagram
+
+```
+Component
+ ├── Leaf
+ └── Composite (contains many Components)
+```
+
+
+---
+# Proxy
+Provides an object that controls access to another object.
+
+- Use Case
+  - Lazy loading images
+  - Network caching layer
+---
+
+# Behavioral Design Patterns
+These patterns focus on how objects communicate.
+
+---
+## **Coordinator Pattern**
+
+### **Intent**
+
+Handle navigation logic outside UIViewController.
+
+### **Flow**
+
+```
+App → Coordinator → Child Coordinators → Screens
+```
+
+
+### **Example**
+
+```swift
+protocol Coordinator {
+    func start()
+}
+```
+
+
+---
+##  **Strategy Pattern**
+
+### **Intent**
+
+Switch between algorithms at runtime.
+
+### **Flow**
+
+```
+Context → Strategy
+```
+
+
+### **Example**
+
+Sorting strategy, payment method selection.
+
+---
+##  **Observer Pattern**
+
+### **Intent**
+
+Notify multiple observers when state changes.
+
+### **Flow**
+
+```
+Subject → Observer1
+        → Observer2
+```
+
+
+### **iOS Example**
+
+* NotificationCenter
+* Combine publisher → subscribers
+
+```swift
+NotificationCenter.default.addObserver(...)
+```
+
+
+---
+##  **Delegation Pattern**
+
+### **Intent**
+
+One-to-one communication between objects.
+
+### **Flow**
+
+```
+Delegator → Delegate (protocol)
+```
+
+
+### **Example**
+
+UITableViewDelegate.
+
+```swift
+protocol LoginDelegate: AnyObject {
+    func didLoginSuccessfully()
+}
+```
+
+
+---
+##  **Dependency Injection Pattern**
+
+### **Intent**
+
+Make components independent and testable.
+
+### **Flow**
+
+```
+Object ← Injected Dependencies
+```
+
+
+### **Tools**
+
+* Needle (you use this)
+* Swinject
+* Resolver
+
+```swift
+init(repository: MoviesRepository) {}
+```
+
+
+---
+##  **State Pattern**
+
+### **Intent**
+
+Object behavior changes based on its state.
+
+### **Example**
+
+Authentication state, onboarding flow.
+
+---
+# Architectural Patterns (iOS Focus)
+
+Architectures define the overall structure of an app.
+
+---
+##  **MVVM Pattern**
+
+### **Intent**
+
+Separate UI logic from business logic.
+
+### **Flow**
+
+```
+View ↔ ViewModel ↔ Model
+     ┌──────────┐
+     │   View   │
+     └─────┬────┘
+           │ Binding
+     ┌─────▼──────┐
+     │ ViewModel   │
+     └─────┬──────┘
+           │
+     ┌─────▼──────┐
+     │   Model     │
+     └─────────────┘
+
+```
+
+
+### **iOS Example (SwiftUI)**
+
+```swift
+class MoviesViewModel: ObservableObject {
+    @Published var movies = []
+}
+
+struct MoviesView: View {
+    @StateObject var vm = MoviesViewModel()
+    var body: some View { List(vm.movies) { ... } }
+}
+```
+
+
+---
+##  **MVC Pattern**
+
+### **Flow**
+
+```
+Controller ↔ View
+Controller ↔ Model
+```
+
+
+### **Where Used**
+
+UIKit default architecture.
+---
+# VIPER
+
+```
+ View → Presenter → Interactor → Entity → Router
+
+```
+
+
+- Benefits
+  - Very modular
+  - Best for large enterprise apps
+---
+
+# Clean Architecture
+
+```
+Presentation → Domain → Data → External
+ UI (SwiftUI/VC)
+        │
+        ▼
+ Presentation (ViewModels)
+        │
+        ▼
+ Domain (UseCases + Entities)
+        │
+        ▼
+ Data (Repository + DataSources)
+        │
+        ▼
+ External (API, Database)
+
+```
+
+
+- Benefits
+  - Use cases layer
+  - Highly testable
+  - Dependency rule: flow only inwards

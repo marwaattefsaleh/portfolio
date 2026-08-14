@@ -1,0 +1,426 @@
+---
+title: "Git — Detailed Knowledge Base"
+description: "A comprehensive wiki for Git concepts, commands, workflows, and advanced topics for your iOS Knowledge Base repository."
+pubDate: 2026-08-14
+tags: ["Git","Tooling"]
+emoji: "🌿"
+---
+
+A comprehensive wiki for Git concepts, commands, workflows, and advanced topics for your *iOS Knowledge Base* repository.
+
+---
+
+## 1. Introduction to Git
+
+Git is a distributed version control system (DVCS) that tracks changes in source code. Every developer has a full copy of the repository with complete version history.
+
+---
+
+## 2. Basic Git Concepts
+
+### **Repository (Repo)**
+
+A collection of files tracked by Git.
+
+### **Commit**
+
+A snapshot of the project at a specific point in time.
+
+### **Branch**
+
+A separate line of development.
+
+### **HEAD**
+
+A pointer to the current commit.
+
+### **Staging Area (Index)**
+
+Where changes are prepared before committing.
+
+---
+
+## 3. Common Git Commands
+
+### **Initialize & Clone**
+
+* `git init` → Creates a new empty repository in the current folder.
+* `git clone <url>` → Downloads a remote repository including full history.
+
+  * Example: `git clone https://github.com/user/repo.git`
+
+### **Status**
+
+* `git status` → Shows changed, staged, and untracked files.
+
+### **Staging Files**
+
+* `git add <file>` → Stage a specific file.
+* `git add .` → Stage all modified and new files.
+* `git restore --staged <file>` → Remove a file from staging.
+
+### **Committing**
+
+* `git commit -m "message"` → Create a new commit.
+* `git commit -am "message"` → Add tracked files & commit them in one step.
+
+### **Branching**
+
+* `git branch` → List branches.
+* `git branch <name>` → Create a new branch.
+* `git switch <name>` → Switch to a branch.
+* `git switch -c <name>` → Create and switch to a branch.
+
+### **Merging**
+
+* `git merge <branch>` → Merge another branch into the current one.
+* Resolves differences using three-way merge.
+
+### **Rebasing**
+
+* `git rebase <branch>` → Replay commits on top of another branch.
+* `git rebase -i <commit>` → Interactive rebase for squashing and editing commits.
+
+### **Fetching vs Pulling**
+
+* `git fetch` → Downloads commits and updates remote-tracking branches.
+* `git pull` → Fetch + merge.
+* `git pull --rebase` → Fetch + rebase instead of merge.
+
+### **Remote Management**
+
+* `git remote -v` → Show remotes.
+* `git remote add origin <url>` → Add a new remote.
+* `git push origin <branch>` → Push branch.
+* `git push -u origin <branch>` → Push and set upstream.
+
+### **Resetting**
+
+* `git reset --soft <commit>` → Roll back commit but keep changes staged.
+* `git reset --mixed <commit>` → Default; keep changes unstaged.
+* `git reset --hard <commit>` → Discard all changes and commits.
+
+### **Reverting**
+
+* `git revert <commit>` → Create a new commit that undoes a previous commit.
+
+### **Stashing**
+
+* `git stash` → Save uncommitted work.
+* `git stash list` → Show all stashes.
+* `git stash apply` → Restore last stash.
+* `git stash pop` → Restore + remove stash.
+
+### **Logs & History**
+
+* `git log` → Full commit history.
+* `git log --oneline` → Short, readable format.
+* `git log --graph --decorate --all` → Visual graph.
+
+### **Diff**
+
+* `git diff` → Show unstaged changes.
+* `git diff --staged` → Show staged changes.
+* `git diff <branch1> <branch2>` → Compare branches.
+
+### **Tagging**
+
+* `git tag <name>` → Create a tag.
+* `git tag -a <name> -m "message"` → Annotated tag.
+* `git push origin <tag>` → Push tag.
+* `git push --tags` → Push all tags.
+
+### **Cherry-Pick**
+
+* `git cherry-pick <commit>` → Apply an existing commit onto current branch.
+
+### **Cleaning**
+
+* `git clean -n` → Preview files to be removed.
+* `git clean -f` → Remove untracked files.
+
+### **Bisect**
+
+* `git bisect start` → Begin binary search for bug.
+* `git bisect good` / `git bisect bad` → Mark commits.
+* `git bisect reset` → End the bisect session.
+
+---
+
+## 4. Merge vs Rebase
+
+### **Merge**
+
+* Creates a merge commit.
+* History shows all branches.
+* Useful for preserving context.
+
+### **Rebase**
+
+* Rewrites commit history.
+* Makes a clean, linear history.
+* Best for local branches before pushing.
+
+---
+
+## 5. Merge Base
+
+### **Definition**
+
+`merge-base` is the **common ancestor** between two branches.
+Git uses this commit as the reference point during merging.
+
+Example:
+
+```
+git merge-base main feature/login
+```
+
+
+This returns the commit hash of the shared ancestor.
+
+### **Why it's important?**
+
+* Git compares branch changes since the merge-base.
+* Helps avoid unnecessary conflicts.
+* Used internally for `merge`, `rebase`, and `diff`.
+
+---
+
+## 6. Fast-Forward vs Non–Fast-Forward
+
+### **Fast-Forward Merge**
+
+Occurs when the target branch has not diverged.
+
+```
+A -- B -- C (main)
+          \
+           D -- E (feature)
+```
+
+
+`main` simply moves forward to E.
+
+### **Non–Fast-Forward Merge**
+
+Occurs when branches diverge, producing a merge commit.
+
+---
+
+## 7. Git Three-Way Merge
+
+Git compares:
+
+1. The **merge base**
+2. The **source branch**
+3. The **target branch**
+
+and resolves differences.
+
+---
+
+## 8. Git Conflicts
+
+Conflicts occur when two branches modify the same lines.
+Git marks them with:
+
+```
+<<<<<<< HEAD
+Current branch
+=======
+Incoming branch
+>>>>>>> feature
+```
+
+
+Developer must manually resolve.
+
+---
+
+## 9. Git Reset vs Revert
+
+### **Reset**
+
+Moves HEAD to a previous commit.
+
+* `--soft` → keep changes staged
+* `--mixed` → keep changes in working dir
+* `--hard` → delete changes
+
+### **Revert**
+
+Creates a new commit that undoes changes.
+
+* Safe for public branches.
+
+---
+
+## 10. Git Cherry-Pick
+
+Apply a specific commit to another branch.
+
+```
+git cherry-pick <hash>
+```
+
+
+Useful in hotfix scenarios.
+
+---
+
+## 11. Git Stash
+
+Temporarily saves uncommitted changes.
+
+```
+git stash
+git stash apply
+```
+
+
+---
+
+## 12. Git Tags
+
+Used for marking releases.
+
+```
+git tag v1.0
+```
+
+
+---
+
+## 13. Git Hooks
+
+Scripts that run automatically at key Git events:
+
+* pre-commit
+* pre-push
+* commit-msg
+  Useful for code formatting, linting, etc.
+
+---
+
+## 14. Git Workflows
+
+### **Git Flow**
+
+* `main` (production)
+* `develop`
+* feature branches
+* release branches
+* hotfix
+
+### **GitHub Flow**
+
+* `main`
+* feature branch → PR → merge → deploy
+
+### **Trunk-Based Development**
+
+* Very small branches
+* Frequent merges
+
+---
+
+## 15. Git Pull vs Fetch
+
+### **git fetch**
+
+Downloads remote changes **without merging**.
+
+### **git pull**
+
+Equivalent to: `git fetch` + `git merge`.
+
+---
+
+## 16. Advanced Topics
+
+### **Reflog**
+
+Tracks movements of HEAD.
+Useful for recovering lost commits.
+
+```
+git reflog
+```
+
+
+### **Squash Commits**
+
+```
+git rebase -i HEAD~5
+```
+
+
+Combine several commits into one.
+
+### **Sparse Checkout**
+
+Checkout only parts of a repo.
+
+---
+
+## 17. Best Practices
+
+* Commit frequently with clear messages.
+* Avoid rewriting history on shared branches.
+* Use branches for features.
+* Protect `main` with PR reviews.
+* Use `.gitignore` wisely.
+
+---
+
+# Git Interview Questions & Answers
+
+| # | Question | Answer |
+|---|---|---|
+| 1 | What is the primary purpose of Git? | Version control
+| 2 | What type of version control system is Git? | Distributed (decentralized) VCS
+| 3 | Which year was Git released? | 2005
+| 4 | What language is Git written in? | C
+| 5 | What are the main objectives of Git? | Speed, data integrity, and support for distributed non-linear workflows
+| 6 | How many main states can a file reside in Git? | 3 — Modified, Staged, Committed
+| 7 | What is the staging area in Git? | The area where changes are prepared before committing
+| 8 | What is the purpose of git add? | To stage changes for the next commit
+| 9 | Which command stages all changes in the current directory? | git add .
+| 10 | How do you check the status of your working directory? | git status
+| 11 | Which command creates an empty Git repository? | git init
+| 12 | How do you get a copy of an existing Git repository? | git clone
+| 13 | What does git clone do? | Copies a repository from a remote source
+| 14 | How can you create a Git repository? | Create a local project and run git init, or clone an existing remote repository
+| 15 | What command connects a local repository to a remote repository? | git remote add origin
+| 16 | What does git remote -v display? | A list of remote repositories and their URLs
+| 17 | Which command downloads objects and references from a remote repository without merging? | git fetch
+| 18 | Which command is equivalent to fetching and merging changes? | git pull
+| 19 | What is the act of transferring commits from a local repository to a remote repository called? | Push
+| 20 | Which command pushes commits to a remote repository? | git push
+| 21 | How do you create a new Git branch? | git branch
+| 22 | In git checkout -b , what does -b indicate? | Create a new branch
+| 23 | Which command is used to switch between branches? | git checkout
+| 24 | Which command switches to the master branch? | git checkout master
+| 25 | How do you merge branch-a into master? | git checkout master then git merge branch-a
+| 26 | How do you create a commit with a message? | git commit -m "Fix error in xxxx"27 | What is a commit hash? | A unique identifier for a commit
+| 28 | Which command shows the history of a repository? | git log
+| 29 | Which command gives a high-level, one-line overview of project history? | git log --oneline
+| 30 | Which flag shows the diff introduced by each commit in git log? | -p
+| 31 | Which command shows the changes introduced in the last two commits? | git log -p -2
+| 32 | What information does git log contain? | Commit hash, commit date, and author information
+| 33 | Which command shows all Git configuration parameters? | git config --list
+| 34 | Which command sets the Git username globally? | git config --global user.name "Rajneesh"
+| 35 | Which command configures Emacs as the default Git editor? | git config --global core.editor emacs
+| 36 | What is the default editor commonly used by Git on Windows installations? | Vim
+| 37 | Which command-line environment is commonly used for interacting with Git on Windows? | Git Bash
+| 38 | Which command is used to undo a commit by creating a new reversing commit? | git revert
+| 39 | What is git reset --hard used for? | Resets the staging area and working directory, discarding uncommitted changes
+| 40 | Which command removes untracked files from the working directory? | git clean
+| 41 | Which command shows modified files and the changes introduced in commits? | git log -p
+| 42 | Which command is used to set a remote repository's short name? | git remote add
+| 43 | Which option of git remote adds a new remote repository? | add44 | Which vendor acquired GitHub for $7.5 billion in 2018? | Microsoft
+| 45 | Which hashing/checksum technique was historically used by Git? | SHA-1
+| 46 | What is a Version Control System (VCS)? | A system that records a project's code changes over time
+| 47 | How do you get code from another repository on GitHub? | Fork the repository through the GitHub interface
+| 48 | Which command changes where HEAD points and can modify the working directory? | git checkout

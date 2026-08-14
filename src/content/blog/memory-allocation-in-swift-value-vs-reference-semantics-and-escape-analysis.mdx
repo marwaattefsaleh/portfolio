@@ -1,0 +1,126 @@
+---
+title: "Memory Allocation in Swift: Value vs Reference Semantics"
+description: "Traditionally, we say that value types are stored on the stack and reference types on the heap."
+pubDate: 2026-08-14
+tags: ["Swift","Memory Management","Performance"]
+emoji: "🗄️"
+---
+
+Traditionally, we say that value types are stored on the stack and reference types on the heap.
+
+In modern Swift, that’s an oversimplification and not always correct.
+
+Swift distinguishes value semantics vs reference semantics, not stack vs heap storage.
+The actual memory location is an implementation detail decided by the compiler.
+
+Swift uses ARC and performs escape analysis. If the compiler can prove that an object—whether it’s a struct or even a class—does not escape its scope, it may be stack-allocated or completely optimized away.
+
+Reference types usually live on the heap because they can be shared, but in some non-escaping scenarios, the compiler can avoid heap allocation.
+
+So today, memory allocation in Swift is performance-driven, not a strict rule based on type. What matters most is whether a value escapes its scope, not whether it’s a struct or a class.
+
+🧠 Key Concepts Interviewers Look For
+
+Make sure these words appear naturally when you answer:
+
+Value semantics vs reference semantics
+
+ARC (not Garbage Collection)
+
+Escape analysis
+
+Compiler optimization
+
+Stack allocation is not guaranteed
+
+“Implementation detail”
+
+🔥 Swift Code Examples Interviewers Love
+1️⃣ Class that does NOT escape (can be stack-allocated)
+func example() \{
+    class Counter \{
+        let value = 10
+    \}
+
+    let counter = Counter()
+    print(counter.value)
+\}
+
+What to say:
+
+Even though Counter is a class, it doesn’t escape the function.
+The compiler can stack-allocate it or eliminate the allocation entirely.
+
+2️⃣ Class that escapes → must be heap-allocated
+func makeCounter() -> AnyObject \{
+    class Counter \{
+        let value = 10
+    \}
+
+    return Counter()
+\}
+
+Why heap?
+
+Returned from the function
+
+Escapes the scope
+
+Lifetime extends beyond the stack frame
+
+3️⃣ Closure capture forces heap allocation
+func example() \{
+    class Logger \{
+        let id = UUID()
+    \}
+
+    let logger = Logger()
+
+    let closure = \{
+        print(logger.id)
+    \}
+\}
+
+Key point:
+
+Because the class instance is captured by a closure, it escapes and must live on the heap.
+
+4️⃣ Value type does NOT guarantee stack allocation
+struct LargeStruct \{
+    let data = [Int](repeating: 0, count: 10_000)
+\}
+
+func example() -> LargeStruct \{
+    return LargeStruct()
+\}
+
+Important insight:
+
+Even though this is a struct, it may still be heap-backed internally due to size and lifetime.
+
+5️⃣ Non-escaping vs escaping closure (favorite interview topic)
+func nonEscaping(_ block: () -> Void) \{
+    block()
+\}
+
+func escaping(_ block: @escaping () -> Void) \{
+    DispatchQueue.main.async \{
+        block()
+    \}
+\}
+
+What to explain:
+
+nonEscaping closures → can stay on stack
+
+@escaping closures → must move captured data to heap
+
+🧩 One-Liner Summary (Very Strong)
+
+In Swift, memory allocation is an optimization, not a language guarantee.
+The compiler uses escape analysis under ARC to decide whether data lives on the stack, heap, or nowhere at all.
+
+🏁 Bonus: Compare with .NET (optional, senior-level)
+
+Similar to modern .NET, Swift’s compiler is increasingly optimization-driven.
+However, Swift uses ARC instead of a garbage collector, which changes the trade-offs but not the underlying idea.

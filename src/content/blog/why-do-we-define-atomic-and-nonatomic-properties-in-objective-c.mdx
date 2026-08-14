@@ -1,0 +1,182 @@
+---
+title: "Why atomic and nonatomic properties in Objective-C?"
+description: "In Objective-C, the atomic and nonatomic property attributes determine how the compiler synthesizes a property's getter and setter with respect to…"
+pubDate: 2026-08-14
+tags: ["Objective-C","Thread Safety"]
+emoji: "⚛️"
+---
+
+In Objective-C, the `atomic` and `nonatomic` property attributes determine how the compiler synthesizes a property's **getter** and **setter** with respect to **thread safety**.
+
+- **`atomic`** attempts to make individual property reads and writes thread-safe.
+- **`nonatomic`** performs property access without synchronization, making it faster but **not thread-safe**.
+
+---
+
+# 1. `atomic` (Default)
+
+```objective-c
+@property (atomic, strong) NSString *name;
+```
+
+
+When a property is declared as **`atomic`**:
+
+- The compiler generates synchronized getter and setter methods.
+- If one thread is writing while another is reading, the accessor won't return a partially written value.
+- Individual property reads and writes are thread-safe.
+
+### Example
+
+```objective-c
+self.name = @"John";
+```
+
+
+Another thread will either read the **old value** or the **new value**, but never a partially written pointer.
+
+---
+
+## Is `atomic` Enough?
+
+**No.**
+
+`atomic` only guarantees that **individual property access** is synchronized.
+
+It **does not** make the object itself thread-safe or make multiple operations execute atomically.
+
+### Example
+
+```objective-c
+if (self.name) {
+    NSLog(@"%@", self.name);
+}
+```
+
+
+Even though `name` is `atomic`, another thread could change the property between the `if` check and the `NSLog`.
+
+This race condition can still occur because the sequence of operations is **not atomic**.
+
+For thread safety across multiple operations, you still need higher-level synchronization mechanisms such as:
+
+- Locks (`NSLock`, `os_unfair_lock`)
+- Serial Dispatch Queues
+- Grand Central Dispatch (GCD)
+- `OperationQueue`
+- Swift Actors
+- Other synchronization primitives
+
+---
+
+# 2. `nonatomic`
+
+```objective-c
+@property (nonatomic, strong) NSString *name;
+```
+
+
+When a property is declared as **`nonatomic`**:
+
+- No synchronization is performed.
+- Getter and setter methods execute faster.
+- No thread-safety guarantees are provided.
+
+This is the property attribute used in **almost all iOS applications**.
+
+---
+
+# Why Do We Usually Use `nonatomic`?
+
+Most iOS applications use **`nonatomic`** because:
+
+- UI code runs on the **main thread**.
+- Synchronizing every property access introduces unnecessary overhead.
+- Thread safety is typically managed at a higher level.
+
+Common approaches include:
+
+- Grand Central Dispatch (GCD)
+- `OperationQueue`
+- Swift Actors
+- Locks
+- Serial Queues
+
+Additionally, **UIKit is designed to be used on the main thread**, making synchronized property access unnecessary in most cases.
+
+---
+
+# Performance Comparison
+
+## `atomic`
+
+```objective-c
+@property (atomic, strong) NSString *name;
+```
+
+
+### Pros
+
+- ✅ Safer individual property access
+- ✅ Prevents partially written values from being read
+
+### Cons
+
+- ❌ Slower due to synchronization overhead
+- ❌ Does not make the object fully thread-safe
+
+---
+
+## `nonatomic`
+
+```objective-c
+@property (nonatomic, strong) NSString *name;
+```
+
+
+### Pros
+
+- ✅ Faster getter and setter
+- ✅ Better runtime performance
+- ✅ Most common choice in iOS development
+
+### Cons
+
+- ❌ No thread-safety guarantees
+
+---
+
+# Typical Usage
+
+```objective-c
+@interface User : NSObject
+
+@property (nonatomic, strong) NSString *name;
+
+@end
+```
+
+
+This is the most common pattern in modern iOS development.
+
+---
+
+# `atomic` vs `nonatomic`
+
+| Feature | `atomic` | `nonatomic` |
+|---------|----------|-------------|
+| Default Property Attribute | ✅ Yes | ❌ No |
+| Thread-safe Getter/Setter | ✅ Yes (individual access only) | ❌ No |
+| Makes Object Fully Thread-safe | ❌ No | ❌ No |
+| Synchronization Overhead | Yes | No |
+| Performance | Slower | Faster |
+| Commonly Used in iOS Apps | Rarely | Almost Always |
+
+---
+
+# Key Takeaways
+
+- **`atomic`** synchronizes individual getter and setter operations but **does not guarantee complete thread safety**.
+- **`nonatomic`** skips synchronization, providing better performance.
+- Most iOS applications use **`nonatomic`** because UI work occurs on the main thread.
+- For complex thread-safe behavior, rely on higher-level synchronization techniques such as **GCD**, **OperationQueue**, **locks**, **serial queues**, or **Swift Actors**, rather than the `atomic` property attribute alone.

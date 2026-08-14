@@ -1,0 +1,178 @@
+---
+title: "Swift vs Objective-C"
+description: "Swift is Apple’s modern language introduced in 2014 to eventually replace Objective-C. It focuses on safety, performance, expressiveness, and moder…"
+pubDate: 2026-08-14
+tags: ["Swift","Objective-C"]
+emoji: "🆚"
+---
+
+Swift is Apple’s modern language introduced in 2014 to eventually replace Objective-C. It focuses on **safety, performance, expressiveness, and modern programming paradigms**, while maintaining interoperability with Objective-C.
+
+---
+
+## 1. Safety
+
+Aspect | Swift | Objective-C
+-- | -- | --
+Null Handling | Uses optionals, preventing accidental nil usage | Uses nil pointers manually; runtime crashes more likely
+Strong Typing | Compiler catches type errors at compile time | Dynamic typing (id) may lead to runtime errors
+Memory Safety | Value types reduce shared mutable state; safer reference types | Reference types are shared; more prone to memory leaks if ARC misused
+
+**Example: Optionals in Swift**
+
+```swift
+var name: String? = "John"
+print(name?.uppercased() ?? "No name") // Safe
+```
+
+
+---
+
+## 2. Modern and Concise Syntax
+
+- Swift syntax is **cleaner, less verbose**, and easier to read.
+
+- No need for header files (`.h`) or manual imports in many cases.
+
+- Objective-C syntax is **verbose**, with brackets and multiple `@` symbols.
+
+**Example: Print in Swift vs Objective-C**
+
+```swift
+// Swift
+print("Hello, World!")
+
+// Objective-C
+NSLog(@"Hello, World!");
+```
+
+
+---
+
+## 3. Memory Management
+
+- Swift uses **ARC** plus **value types** (structs, enums) to reduce retain cycles.
+
+- Objective-C relies solely on ARC for reference types, which can still produce memory leaks if not carefully managed.
+
+**Example: Struct as value type (safe copy)**
+
+```swift
+struct Point { var x: Int; var y: Int }
+var p1 = Point(x: 0, y: 0)
+var p2 = p1
+p2.x = 5
+print(p1.x) // 0 — p1 unchanged
+```
+
+
+---
+
+## 4. Performance
+
+- Swift’s compiler can perform **static dispatch (compile time)** for structs and enums, making code faster.
+
+- Objective-C relies on **dynamic dispatch** for almost everything, which can be slightly slower.
+
+- Swift also optimizes memory usage with **value types** and **stack allocation**.
+
+---
+
+## 5. Optionals and Error Handling
+
+- Swift has **built-in optional types** and **try/catch error handling**, reducing runtime crashes.
+
+- Objective-C uses `nil` checks and `NSError` patterns, which are more error-prone and verbose.
+
+**Example: Swift Error Handling**
+
+```swift
+enum FileError: Error { case notFound }
+func readFile(name: String) throws { throw FileError.notFound }
+
+do {
+    try readFile(name: "file.txt")
+} catch {
+    print(error)
+}
+```
+
+
+---
+
+## 6. Protocol-Oriented Programming (POP)
+
+- Swift encourages **composition over inheritance** using protocols.
+
+- POP allows **code reuse**, safer value semantics, and modular design.
+
+- Objective-C is **OOP-heavy**, relying on class hierarchies.
+
+**Example: Protocol-Oriented Design**
+
+```swift
+protocol Startable { func start() }
+struct Bike: Startable { func start() { print("Bike started") } }
+struct Car: Startable { func start() { print("Car started") } }
+```
+
+
+---
+
+## 7. Functional Programming Features
+
+- Swift supports **closures**, `map`, `filter`, `reduce`, and other functional programming techniques.
+
+- Objective-C has **blocks**, but functional programming support is limited.
+
+**Example: Functional in Swift**
+
+```swift
+let numbers = [1, 2, 3]
+let doubled = numbers.map { $0 * 2 } // [2, 4, 6]
+```
+
+
+---
+
+## 8. Playgrounds and REPL
+
+- Swift supports **interactive playgrounds** for rapid prototyping.
+
+- You can test code in **real-time**, which is not possible in Objective-C.
+
+---
+
+## 9. Interoperability
+
+- Swift can **use Objective-C code** via bridging headers.
+
+- Objective-C can **use Swift code** with `@objc` and the generated `ProjectName-Swift.h`.
+
+- This allows **gradual migration** from Objective-C to Swift.
+
+---
+
+## 10. Better Developer Experience
+
+- Swift reduces boilerplate code.
+
+- Compiler is more intelligent: provides **better errors and warnings**.
+
+- Easier **refactoring**, **modularity**, and **unit testing**.
+
+---
+
+## ✅ Key Takeaways
+
+- Swift is **safer**: optionals, strong typing, safer memory handling
+
+- Swift is **faster**: value types, static dispatch, optimized compiler
+
+- Swift is **more expressive and modern**: concise syntax, functional programming
+
+- Swift encourages **POP and modular design**
+
+- Objective-C is **OOP-heavy**, verbose, and more prone to runtime issues
+
+- Interoperability allows **smooth migration** from Objective-C

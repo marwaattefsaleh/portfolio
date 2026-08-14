@@ -1,0 +1,255 @@
+---
+title: "SwiftData"
+description: "SwiftData is Apple’s modern Swift-native persistence framework designed for concurrency-safe, SwiftUI-friendly data storage."
+pubDate: 2026-08-14
+tags: ["Persistence","SwiftData","SwiftUI"]
+emoji: "💠"
+---
+
+SwiftData is Apple’s modern Swift-native persistence framework designed for concurrency-safe, SwiftUI-friendly data storage.
+It builds on concepts like **@Model**, **@ModelActor**, **ModelContainer**, and **ModelDescriptor** to simplify Core Data patterns
+
+# ⭐️ Overview
+SwiftData provides:
+- Strongly typed models using @Model
+- Thread-safe access via @ModelActor
+- SwiftUI integration with @Query and @Environment(\.modelContext)
+- Model management using ModelContainer
+- Schema description and configuration with ModelDescriptor
+
+SwiftData aims to reduce boilerplate and improve safety compared to Core Data.
+
+# ⭐️ @Model
+@Model marks a class as a persisted entity in SwiftData.
+
+- Example
+
+```
+import SwiftData
+
+@Model
+final class User {
+    var id: UUID
+    var name: String
+    var age: Int
+    
+    init(id: UUID = UUID(), name: String, age: Int) {
+        self.id = id
+        self.name = name
+        self.age = age
+    }
+}
+```
+
+
+- Key Points:
+  - Classes annotated with @Model are persisted automatically.
+  - Properties are persisted unless marked with @Transient.
+  - Relationships are supported:
+
+```
+@Model
+class Post {
+    var title: String
+    var author: User      // To-One
+    var comments: [Comment]  // To-Many
+}
+```
+
+
+# @Transient
+- By default, all properties in a SwiftData @Model are persisted to the database.
+- Sometimes, you may want a property that is computed, temporary, or runtime-only, which should not be saved.
+- Marking it with @Transient tells SwiftData: “Do not store this property in the database.”
+- Syntax Example
+
+```
+@Model
+final class ExperienceDBModel {
+    var title: String
+    var desc: String?
+    
+    @Transient
+    var isSelected: Bool = false  // runtime-only, not saved in DB
+}
+```
+
+
+- title and desc → persisted
+- isSelected → not persisted, disappears when you reload the object from the database
+# ⭐️ ModelContainer
+- ModelContainer is the main persistence context for SwiftData.
+- It is similar to Core Data’s NSPersistentContainer.
+
+Creating a ModelContainer
+
+```
+let container = try ModelContainer(for: [User.self, Account.self, Post.self])
+```
+
+
+Using in SwiftUI
+
+```
+@main
+struct MyApp: App {
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+                .modelContainer(container)
+        }
+    }
+}
+```
+
+
+Notes:
+- Holds all registered models.
+- Provides ModelContext for CRUD operations.
+- Supports multiple stores if needed.
+
+# ⭐️ 5. ModelContext
+
+ModelContext is obtained from ModelContainer and used to insert, delete, update, and save models.
+
+```
+@Environment(\.modelContext) private var context
+
+// Insert
+let newUser = User(name: "Alice", age: 25)
+context.insert(newUser)
+
+// Delete
+context.delete(newUser)
+
+// Save
+try await context.save()
+```
+
+
+Changes in ModelContext are automatically reflected in SwiftUI views when using @Query.
+
+# ⭐️ ModelDescriptor
+
+ModelDescriptor describes a model's schema and properties for custom configuration.
+
+- Example
+
+```
+let userDescriptor = ModelDescriptor(for: User.self)
+```
+
+
+- Use it to configure default values, relationships, and constraints.
+- Can be passed to ModelContainer(for:descriptors:) for advanced setup.
+
+# ⭐️ Relationships
+SwiftData supports:
+- To-one relationships
+- To-many relationships
+
+```
+@Model
+class Post {
+    var title: String
+    var author: User
+    var comments: [Comment]
+}
+
+@Model
+class Comment {
+    var message: String
+    var post: Post
+}
+```
+
+
+- Supports automatic cascade deletes.
+- Observed automatically in SwiftUI views.
+
+# ⭐️ Querying & Observing
+
+```
+@Query(sort: \User.name, filter: \.age > 18) var adultUsers: [User]
+```
+
+
+- SwiftUI views automatically update when the data changes.
+- Works with @ModelActor models safely in concurrent contexts.
+
+# What @ModelActor is
+- @ModelActor is a special actor provided by SwiftData.
+- It isolates access to SwiftData’s model context (modelContext).
+- Any code that reads or writes SwiftData @Model objects should run inside this actor.
+- It ensures thread safety, so you don’t accidentally mutate a database object from multiple threads.
+
+## Why you need it
+- SwiftData models (@Model classes) are reference types:
+  - They are mutable
+  - Managed by modelContext
+  - Not thread-safe by default
+
+- Without @ModelActor, you could accidentally:
+  - Access a model from a background thread
+  - Mutate it while SwiftData is observing it
+  - Crash the app due to concurrency violations
+
+- @ModelActor automatically enforces:
+  - All access to modelContext happens in one isolated thread
+  - All reads/writes of @Model objects are safe
+
+## How it works in practice
+Example:
+
+```
+@ModelActor
+actor ExperienceModelActor {
+    func getRecommendedExperiences() throws -> [ExperienceEntity] {
+        let results = try modelContext.fetch(FetchDescriptor<ExperienceDBModel>())
+        return results.map { $0.toEntity() }
+    }
+}
+```
+
+
+- The actor ensures all fetches happen safely, even if you call await experienceActor.getRecommendedExperiences() from multiple threads.
+- You don’t need to wrap every fetch/save in a custom DispatchQueue — @ModelActor handles it.
+
+## Key features
+![Screenshot 2025-11-24 at 5 05 08 AM](https://github.com/user-attachments/assets/a6bae35b-9a13-4733-b13b-b86c5311a627)
+
+## What it is NOT
+- @ModelActor does not make your model Sendable.
+- @ModelActor does not convert your class to a struct.
+- It only ensures safe, isolated access to the model context and model objects.
+
+## Visual analogy
+Think of @ModelActor like a bank teller desk:
+- Only one teller (actor) handles the account (model context).
+- Customers (other threads) must line up and wait (await) to access the teller.
+- The money (database objects) never leaves the teller’s control unsafely.
+
+## Summary
+
+@ModelActor is SwiftData’s built-in actor that isolates database operations. It ensures thread-safe access to @Model objects without you needing to manually manage concurrency. All reads and writes happen safely inside the actor.
+
+# @Attribute
+![Screenshot 2025-11-24 at 5 09 03 AM](https://github.com/user-attachments/assets/82db1b83-c76e-4450-b543-6f3303c00a0f)
+
+Example:
+
+```
+@Attribute(.indexed) var title: String
+@Attribute(.defaultValue(false)) var isRecommended: Bool
+```
+
+
+## Key Points
+- @Attribute is mandatory only if you want constraints or metadata; otherwise, plain properties are stored automatically.
+- It does not make a property computed; it’s still persisted in the database.
+- Works only inside @Model classes.
+
+## Why use @Attribute(.unique) for id
+- Ensures no duplicates in the database
+- Acts like a primary key
+- Useful for fetching or updating objects reliably

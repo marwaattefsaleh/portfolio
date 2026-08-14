@@ -1,0 +1,378 @@
+---
+title: "Swift Persistence: Realm vs Core Data vs SwiftData"
+description: "A detailed guide to understanding different data persistence solutions in iOS: what they are, when to use them, and the pros/cons of each."
+pubDate: 2026-08-14
+tags: ["Persistence","Core Data","Realm","SwiftData"]
+emoji: "🗂️"
+---
+
+A detailed guide to understanding different data persistence solutions in iOS: what they are, when to use them, and the pros/cons of each.
+
+---
+
+# 1. Introduction
+
+When building an iOS app, choosing the right persistence layer is crucial. Apple’s ecosystem offers multiple solutions. The most common ones are:
+
+- **Core Data** – Apple's mature object graph + persistence framework.
+
+- **SwiftData** – Apple’s new Swift-native persistence framework (iOS 17+).
+
+- **Realm** – A third-party high-performance mobile database.
+
+Each technology has different use cases depending on app size, performance needs, complexity, and iOS deployment target.
+
+---
+
+# 2. What is Core Data?
+
+Core Data is Apple’s old but powerful framework for managing **object graphs**, persistence, validation, undo/redo, and more.
+
+## Key Characteristics
+
+- Not a database (conceptually), but can **persist data using SQLite**.
+
+- Supports complex relationships.
+
+- Has built-in support for faulting, batching, memory management.
+
+- Works with large data sets.
+
+- Integrates with iCloud.
+
+## Pros
+
+- Very powerful for large models.
+
+- Mature and stable.
+
+- Built-in support in Xcode.
+
+- Works on iOS 12+.
+
+## Cons
+
+- Verbose API (unless using wrappers).
+
+- Harder to test.
+
+- Steep learning curve.
+
+- Complex concurrency model.
+
+## When to Use Core Data
+
+- You need to support **older iOS versions (&lt; iOS 17)**.
+
+- You need **complex relationships** (many-to-many, constraints, delete rules).
+
+- You need **high performance with huge datasets**.
+
+- You need features like **undo/redo**, **faulting**, or **iCloud sync**.
+
+---
+
+# 3. What is SwiftData?
+
+SwiftData is Apple’s modern persistence framework introduced in **iOS 17**, built on top of Core Data but designed to be:
+
+- Swift-first
+
+- Type-safe
+
+- Declarative
+
+- Much simpler
+
+It feels like SwiftUI for data persistence.
+
+## Key Characteristics
+
+- Built on Core Data, but much simpler API.
+
+- Uses macros: `@Model` for defining models.
+
+- Deep integration with SwiftUI.
+
+- Automatic schema generation from Swift types.
+
+- Better concurrency model.
+
+## Pros
+
+- Very easy to use.
+
+- Perfect for SwiftUI apps.
+
+- Modern concurrency (`actor`, async/await) friendly.
+
+- Less boilerplate.
+
+- Data automatically updates UI.
+
+## Cons
+
+- Only works on **iOS 17+**.
+
+- Still new → evolving.
+
+- Missing some advanced Core Data features.
+
+## When to Use SwiftData
+
+- Building a **new SwiftUI app**.
+
+- Deployment target is **iOS 17+**.
+
+- You need simple to moderately complex persistence.
+
+- You don’t need the full flexibility of traditional Core Data.
+
+---
+
+# 4. What is Realm?
+
+Realm is a third-party cross-platform mobile database designed to be **fast, simple, and developer-friendly**.
+
+## Key Characteristics
+
+- No need for context, save() calls, or fetching.
+
+- Writes and reads are very fast.
+
+- Uses its own database engine (not SQLite).
+
+- Includes live objects and auto-updating queries.
+
+## Pros
+
+- Extremely easy to use.
+
+- Multiplatform (iOS, Android).
+
+- Very fast, especially with large data.
+
+- Good for real-time apps.
+
+- Zero-boilerplate.
+
+## Cons
+
+- Not native Apple tech.
+
+- Heavier binary size.
+
+- Requires third-party dependency.
+
+- Harder to migrate away from.
+
+## When to Use Realm
+
+- Data-heavy apps needing ultra performance.
+
+- Cross-platform apps (iOS + Android).
+
+- Apps that require **real-time updates** (chat, dashboards).
+
+- Apps with complex queries.
+
+- When you want easier development compared to Core Data.
+
+---
+
+# 5. Comparison Table
+
+Feature | Core Data | SwiftData | Realm
+-- | -- | -- | --
+iOS Version | iOS 12+ | iOS 17+ | iOS 11+
+Performance | High | High | Very High
+Ease of Use | Medium-Hard | Easy | Very Easy
+SwiftUI Integration | Medium | Excellent | Good
+Cross-platform | No | No | Yes
+Schema Migration | Complex | Automatic | Easy
+Best For | Large apps | SwiftUI apps | Real-time & cross-platform apps
+
+---
+
+# 6. Common Use Case Scenarios
+
+## A. Small SwiftUI App (Notes, Tasks, Personal App)
+
+→ **Use SwiftData**
+
+- Easy
+
+- Less code
+
+- Auto UI updates
+
+## B. Enterprise App with Large Data Models
+
+→ **Use Core Data**
+
+- Battle-tested
+
+- Complex relationships
+
+- Faulting & memory optimization
+
+## C. Chat App, Dashboard, or Algorithm-heavy App
+
+→ **Use Realm**
+
+- Real-time sync
+
+- Faster writes
+
+- Simpler concurrency
+
+## D. Cross-platform App (iOS + Android)
+
+→ **Use Realm**
+
+## E. Supporting old iOS versions (&lt; 17)
+
+→ **Use Core Data or Realm**, because SwiftData requires iOS 17.
+
+---
+
+# 7. Real Examples
+
+## Example 1: SwiftData Model
+
+```swift
+@Model
+class TodoItem {
+    var title: String
+    var isDone: Bool
+}
+```
+
+
+## Example 2: Core Data Entity
+
+```swift
+class Task: NSManagedObject {
+    @NSManaged var title: String
+    @NSManaged var isDone: Bool
+}
+```
+
+
+## Example 3: Realm Model
+
+```swift
+class Task: Object {
+    @Persisted var title: String
+    @Persisted var isDone: Bool
+}
+```
+
+
+---
+
+# 8. Conclusion
+
+Choosing between Core Data, SwiftData, and Realm depends on:
+
+- Deployment target
+
+- Performance requirements
+
+- App architecture (SwiftUI or UIKit)
+
+- Data model complexity
+
+- Whether you need cross-platform support
+
+### Best Rule of Thumb
+
+- **SwiftUI + iOS 17+ = SwiftData**
+
+- **Old deployment target or complex system = Core Data**
+
+- **High-performance or cross-platform = Realm**
+
+If you want, I can add:
+
+- Migration strategies between these technologies
+
+- Advanced examples
+
+- Performance benchmark comparisons
+
+- When to mix them with cloud backends (Firebase, Supabase, etc.)
+
+# Fetching in Realm vs SwiftData vs Core Data
+Fetching data is one of the core operations in any persistent storage system.
+Although Realm, SwiftData, and Core Data all allow you to fetch objects, the way they fetch data and manage memory, threading, and query execution is fundamentally different.
+
+This guide explains how fetching works across all three systems in a clear and interview-ready format.
+
+# Core Data — Fetching
+**How Core Data Fetches Data**
+- Uses NSFetchRequest to describe a SQL-like query.
+- Predicates are converted into SQL WHERE clauses.
+- Sorting is executed by SQLite unless using in-memory stores.
+- Returns faults (lightweight object shells) until properties are accessed.
+- Requires correct context confinement for thread safety.
+
+🔹 Example
+
+```
+let request: NSFetchRequest<Experience> = Experience.fetchRequest()
+request.predicate = NSPredicate(format: "isRecommended == true")
+request.sortDescriptors = [NSSortDescriptor(key: "order", ascending: true)]
+
+let results = try context.fetch(request)
+```
+
+
+## Key Characteristics
+![Screenshot 2025-11-24 at 7 27 38 AM](https://github.com/user-attachments/assets/ed73ce43-3065-412b-b6f3-42549b411332)
+
+# Realm — Fetching
+**How Realm Fetches Data**
+- Uses Results which is a lazy, auto-updating query.
+- Realm does not fetch all objects into memory on query.
+- Filtering happens inside the Realm C++ storage engine.
+- Objects reflect database state in real time (live objects).
+
+🔹 Example
+
+```
+let results = realm.objects(Experience.self)
+    .filter("isRecommended == true AND likesNo > 10")
+    .sorted(byKeyPath: "order")
+```
+
+
+🔹 Key Characteristics
+![Screenshot 2025-11-24 at 7 30 40 AM](https://github.com/user-attachments/assets/a1f0b444-5928-44f6-a689-4ac0a1a63769)
+
+# SwiftData — Fetching
+**How SwiftData Fetches Data**
+- Uses FetchDescriptor (the modern replacement for NSFetchRequest).
+- Uses a type-safe Swift Predicate DSL.
+- Built on top of Core Data’s engine but with:
+  - cleaner API
+  - automatic context management
+  - Works with @ModelActor for thread safety.
+
+🔹 Example
+
+```
+let descriptor = FetchDescriptor<ExperienceModel>(
+    predicate: #Predicate { $0.isRecommended == true },
+    sortBy: [SortDescriptor(\.order)]
+)
+
+let results = try context.fetch(descriptor)
+```
+
+
+🔹 Key Characteristics
+![Screenshot 2025-11-24 at 7 32 21 AM](https://github.com/user-attachments/assets/7636a0fe-90d5-4baf-88b7-87e6a5c6a56a)
+
+# Side-by-Side Comparison Table
+![Screenshot 2025-11-24 at 7 32 30 AM](https://github.com/user-attachments/assets/15a08424-b1e7-4ca3-aab1-ea814fa18ada)

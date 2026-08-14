@@ -1,0 +1,86 @@
+---
+title: "Copy-on-Write (COW) in Swift"
+description: "Copy-on-Write (COW) is a memory optimization technique used in Swift to efficiently handle value types (like Array, Dictionary, and Set) without un…"
+pubDate: 2026-08-14
+tags: ["Swift","Value Types","Performance"]
+emoji: "📄"
+---
+
+Copy-on-Write (COW) is a memory optimization technique used in Swift to efficiently handle value types (like Array, Dictionary, and Set) without unnecessary copying. It allows Swift to behave like a value type but avoid performance penalties until a mutation occurs.
+
+# Overview
+In Swift, arrays, dictionaries, and sets are value types, meaning that assigning them to a new variable or passing them to a function copies the data.
+
+However, copying large data structures is expensive. Copy-on-Write solves this problem by deferring the copy operation until the data is actually modified.
+
+Essentially: Read operations share memory. Write operations trigger a copy.
+
+# Why Copy-on-Write Exists
+
+Without COW, assigning a large array to multiple variables would duplicate the memory immediately:
+
+```
+var array1 = Array(repeating: 0, count: 1_000_000)
+var array2 = array1  // Expensive copy
+```
+
+
+With COW, Swift does not immediately copy the data:
+
+```
+var array1 = Array(repeating: 0, count: 1_000_000)
+var array2 = array1  // No copy yet
+array2.append(1)     // Copy happens here, only when array2 changes
+```
+
+
+This improves performance and memory efficiency.
+
+# How Swift Implements COW
+Swift standard library types (like Array, Dictionary, Set) use reference storage under the hood:
+Each value type wraps a reference to heap storage.
+Multiple value instances can share the same storage.
+
+- When a mutation occurs:
+  - Swift checks if the storage is shared.
+  - If shared, a unique copy is created (write happens on the copy).
+  - If not shared, the mutation happens in-place.
+
+This is transparent to developers.
+
+- Examples
+  - Array Example
+
+```
+var array1 = [1, 2, 3]
+var array2 = array1 // No copy yet
+
+print(Unmanaged.passUnretained(array1 as AnyObject).toOpaque())
+print(Unmanaged.passUnretained(array2 as AnyObject).toOpaque())
+
+array2.append(4) // Copy occurs here
+
+print(array1) // [1, 2, 3]
+print(array2) // [1, 2, 3, 4]
+```
+
+
+   - Dictionary Example
+var dict1 = ["a": 1, "b": 2]
+var dict2 = dict1 // Shared storage
+
+dict2["c"] = 3    // Unique copy is created
+
+print(dict1) // ["a": 1, "b": 2]
+print(dict2) // ["a": 1, "b": 2, "c": 3]
+
+# Benefits of Copy-on-Write
+- Memory Efficiency: Multiple instances share the same storage until mutated.
+- Performance: Avoids unnecessary copies for large data structures.
+- Value Semantics: Maintains Swift’s expected behavior for value types
+
+# Things to Keep in Mind
+- COW only applies to value types (struct types) in Swift.
+- Classes (reference types) do not use COW.
+- Mutating shared storage triggers copying, which may have performance implications in tight loops.
+- COW is transparent, but understanding it helps avoid unexpected copies.

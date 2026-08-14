@@ -1,0 +1,324 @@
+---
+title: "Async/Await in Swift Concurrency"
+description: "A complete explanation of async/await in Swift, how it works under the hood, execution behavior, structured concurrency, actors, tasks, cancellatio…"
+pubDate: 2026-08-14
+tags: ["Swift","Concurrency","Async/Await"]
+emoji: "⚡"
+---
+
+A complete explanation of async/await in Swift, how it works under the hood, execution behavior, structured concurrency, actors, tasks, cancellation, and best practices.
+
+---
+
+# 1. What Is async/await?
+
+`async/await` is Swift’s built-in syntax for writing asynchronous (non-blocking) code in a linear, readable way.
+
+Instead of using callbacks or completion handlers:
+
+```swift
+fetchMovies { result in ... }
+```
+
+
+You write:
+
+```swift
+let movies = try await fetchMovies()
+```
+
+
+It behaves like synchronous code but doesn’t block the thread.
+
+---
+
+# 2. Why async/await?
+
+- More readable
+
+- Avoid pyramid of doom
+
+- Better error handling (with `try`)
+
+- Automatically works with Swift’s structured concurrency system
+
+- Helps avoid race conditions
+
+- Interacts with async sequences and actors
+
+---
+
+# 3. How async/await Works Under the Hood
+
+When a function marked as `async` is awaited:
+
+- The function may **suspend** at any `await` point.
+
+- The current task yields execution.
+
+- When the awaited work finishes, Swift resumes the task.
+
+**Suspension ≠ Blocking Thread**
+
+This is key: no thread is blocked.
+
+---
+
+# 4. Marking a Function as async
+
+```swift
+func loadUser() async -> User { ... }
+```
+
+
+Add `throws` if it can throw errors:
+
+```swift
+func loadUser() async throws -> User
+```
+
+
+---
+
+# 5. Calling async functions
+
+You must call from inside an `async` context:
+
+```swift
+let user = try await loadUser()
+```
+
+
+Calling async from sync:
+
+```swift
+Task {
+    let user = try await loadUser()
+}
+```
+
+
+---
+
+# 6. Structured Concurrency
+
+Swift ensures tasks form a strict tree.
+
+```swift
+Parent Task
+ ├─ Child Task 1
+ └─ Child Task 2
+```
+
+
+Child tasks are automatically awaited unless marked as detached.
+
+---
+
+# 7. Tasks
+
+### Creating a Task
+
+```swift
+Task {
+    try await loadData()
+}
+```
+
+
+This runs concurrently with the caller.
+
+### Task Priority
+
+```swift
+Task(priority: .high) { ... }
+```
+
+
+---
+
+# 8. Task Groups: Parallel Async Work
+
+Run multiple async functions in parallel without waiting for each one.
+
+```swift
+try await withThrowingTaskGroup(of: Movie.self) { group in
+    for id in ids {
+        group.addTask { try await fetchMovie(id) }
+    }
+
+    for try await movie in group { print(movie) }
+}
+```
+
+
+### Benefit: fully parallel, not sequential.
+
+---
+
+# 9. async let – Lightweight Parallelism
+
+```swift
+async let movies = fetchMovies()
+async let actors = fetchActors()
+
+let (m, a) = try await (movies, actors)
+```
+
+
+### Both calls run in parallel.
+
+---
+
+# 10. Detached Tasks
+
+Runs outside the parent task hierarchy.
+
+```swift
+let handle = Task.detached { ... }
+```
+
+
+Use rarely—no inherited priority, no parent cancellation.
+
+---
+
+# 11. Async Sequences
+
+Asynchronous streams of values.
+
+```swift
+for await value in stream {
+    print(value)
+}
+```
+
+
+Useful for networking events, WebSockets, sensors, Combine-like streams.
+
+---
+
+# 12. Cancellation
+
+Every task can be cancelled.
+
+Check for cancellation:
+
+```swift
+try Task.checkCancellation()
+```
+
+
+Respond to cancellation:
+
+```swift
+for i in 0..<10_000 {
+    if Task.isCancelled { return }
+}
+```
+
+
+Cancelled tasks throw `CancellationError`.
+
+---
+
+# 13. Error Handling with async/await
+
+```swift
+func loadData() async throws -> Data { ... }
+
+Task {
+    do {
+        let data = try await loadData()
+    } catch { print(error) }
+}
+```
+
+
+---
+
+# 14. Actors: Safe Concurrency
+
+Actors guarantee thread safety.
+
+```swift
+actor Counter {
+    var value = 0
+    func increment() { value += 1 }
+}
+```
+
+
+Call from outside:
+
+```swift
+await counter.increment()
+```
+
+
+---
+
+# 15. MainActor
+
+Ensures UI updates occur on the main thread.
+
+```swift
+@MainActor
+class MoviesViewModel: ObservableObject {
+    @Published var movies = []
+}
+```
+
+
+Async code can hop back to the main actor:
+
+```swift
+await MainActor.run { self.state = .loaded }
+```
+
+
+---
+
+# 16. Async/Await vs GCD
+
+Feature | GCD | async/await
+-- | -- | --
+Syntax | callbacks | straight-line code
+Error handling | manual | built-in (try)
+Cancellation | none | built-in
+Structured concurrency | ❌ | ✅
+Thread hops | manual | automatic
+
+async/await is **modern Swift preferred** for all async work.
+
+---
+
+# 17. Best Practices
+
+- Prefer `async let` for parallel subtasks.
+
+- Use `TaskGroup` for dynamic parallelism.
+
+- Avoid `Task.detached` unless needed.
+
+- Use `actors` for shared mutable state.
+
+- Mark ViewModels with `@MainActor`.
+
+- Break long async functions into smaller ones.
+
+- Always handle cancellation.
+
+---
+
+# 18. Common Mistakes
+
+❌ Calling async function from sync context without Task
+
+❌ Forgetting `await` on actor method
+
+❌ Blocking with `sleep()` instead of `Task.sleep()`
+
+❌ Using detached tasks accidentally
+
+❌ Ignoring cancellation

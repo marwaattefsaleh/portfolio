@@ -1,0 +1,185 @@
+---
+title: "Grand Central Dispatch (GCD)"
+description: "Grand Central Dispatch (GCD) is Apple’s low-level API for managing concurrent code execution. It simplifies working with threads, allowing develope…"
+pubDate: 2026-08-14
+tags: ["Swift","Concurrency","GCD"]
+emoji: "🧵"
+---
+
+Grand Central Dispatch (GCD) is Apple’s low-level API for managing concurrent code execution. It simplifies working with threads, allowing developers to execute tasks asynchronously or synchronously on different queues, without manually managing NSThread objects.
+
+- Key features of GCD:
+  - Lightweight: No need to create or manage threads directly.
+  - Queues-based: Tasks are submitted to queues, which handle execution order and concurrency.
+  - Concurrency support: Makes it easy to perform background tasks without blocking the main thread.
+
+# Queues in GCD
+GCD organizes tasks into queues. There are three main types:
+## Main Queue
+- Serial queue that executes tasks on the main thread.
+- Use for UI updates and tasks that must run on the main thread.
+
+- Example:
+
+```
+DispatchQueue.main.async {
+    label.text = "Updated UI"
+}
+```
+
+
+## Global Queues
+- Concurrent queues provided by the system.
+- Shared across the app, optimized for performance.
+Different quality of service (QoS) levels (userInteractive, userInitiated, utility, background).
+
+- Example:
+
+```
+DispatchQueue.global(qos: .background).async {
+    // Background work
+}
+```
+
+
+## Custom Queues
+- Serial or concurrent queues created by the developer.
+- Useful for isolating tasks or controlling execution order.
+
+- Example:
+
+```
+let serialQueue = DispatchQueue(label: "com.app.serialQueue")
+serialQueue.async {
+    // Task runs serially
+}
+
+let concurrentQueue = DispatchQueue(label: "com.app.concurrentQueue", attributes: .concurrent)
+concurrentQueue.async {
+    // Task runs concurrently
+}
+```
+
+
+# Serial vs Parallel (Concurrent) Execution
+- Queues determine how tasks are executed:
+![Screenshot 2025-11-13 at 12 33 24 AM](https://github.com/user-attachments/assets/149d275a-1d20-4d45-b473-a0f0993c31ad)
+
+- Example: Serial
+
+```
+let serialQueue = DispatchQueue(label: "serial")
+serialQueue.async { print("Task 1") }
+serialQueue.async { print("Task 2") }
+// Output: Task 1 -> Task 2
+```
+
+
+- Example: Concurrent
+
+```
+let concurrentQueue = DispatchQueue(label: "concurrent", attributes: .concurrent)
+concurrentQueue.async { print("Task 1") }
+concurrentQueue.async { print("Task 2") }
+// Output: Task 1 and Task 2 may run in parallel
+```
+
+
+# Synchronous vs Asynchronous Execution
+![Screenshot 2025-11-13 at 12 38 20 AM](https://github.com/user-attachments/assets/d9e3f5ba-a876-421d-a7e2-d9dff67e375c)
+
+- Example: Synchronous
+
+```
+DispatchQueue.global().sync {
+    print("Task runs synchronously")
+}
+print("This waits until the task finishes")
+```
+
+
+- Example: Asynchronous
+
+```
+DispatchQueue.global().async {
+    print("Task runs asynchronously")
+}
+print("This runs immediately without waiting")
+```
+
+
+- Important: Avoid calling .sync on the main queue, it can cause deadlocks.
+
+# Rule of Thumb:
+- UI work → main queue
+- Heavy tasks → background/global queue
+- Control order → custom serial queue
+- Independent tasks → async
+- Dependent tasks that need result before continuing → sync (careful)
+
+# DispatchGroup
+DispatchGroup is a GCD construct that allows you to group multiple tasks together and track when they all complete. This is useful for coordinating multiple asynchronous tasks and performing some action when all of them are done.
+
+- Key Features
+  - Track multiple tasks running on different queues.
+  - Wait for all tasks to complete before continuing.
+  - Can notify on completion or block current thread until all tasks finish.
+
+- Common Methods
+![Screenshot 2025-11-13 at 12 44 21 AM](https://github.com/user-attachments/assets/256822d3-6207-4f45-8d30-3ad61e160a37)
+
+- Example: Using DispatchGroup with async tasks
+
+```
+let group = DispatchGroup()
+
+let urls = ["url1", "url2", "url3"]
+
+for url in urls {
+    DispatchQueue.global().async(group: group) {
+        let data = try? Data(contentsOf: URL(string: url)!)
+        print("Downloaded data from \(url)")
+    }
+}
+
+// Notify when all downloads finish
+group.notify(queue: .main) {
+    print("All downloads completed")
+}
+```
+
+
+  - Explanation:
+    - Each async task is added to the DispatchGroup.
+    - notify triggers after all tasks finish, allowing safe UI updates.
+
+- Example: Using enter() and leave()
+
+```
+let group = DispatchGroup()
+
+group.enter()
+DispatchQueue.global().async {
+    // Simulate network task
+    sleep(2)
+    print("Task 1 finished")
+    group.leave()
+}
+
+group.enter()
+DispatchQueue.global().async {
+    sleep(1)
+    print("Task 2 finished")
+    group.leave()
+}
+
+// Wait for all tasks
+group.notify(queue: .main) {
+    print("All tasks completed")
+}
+```
+
+
+  - Key Points:
+    - enter()/leave() are useful for tasks that don’t naturally use the group: parameter.
+    - Ensures proper tracking of tasks even if they are dynamic or conditional.

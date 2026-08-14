@@ -1,0 +1,108 @@
+---
+title: "Dependency Injection (DI)"
+description: "Dependency Injection means giving an object its dependencies rather than letting it create them itself."
+pubDate: 2026-08-14
+tags: ["Architecture","OOP"]
+emoji: "💉"
+---
+
+#### 📖 Definition
+Dependency Injection means giving an object its dependencies rather than letting it create them itself.
+
+In other words:
+- Without DI: A class creates what it needs internally.
+- With DI: The class receives what it needs from the outside (via an initializer, property, or method).
+
+#### 🧠 Why Use DI
+It helps you:
+- Decouple components.
+- Easily swap dependencies (e.g., mock services in tests).
+- Improve reusability and maintainability.
+- Simplify testing (no singletons or hardcoded dependencies).
+
+#### ⚙️ Example – Dependency Injection (no framework)
+
+```
+protocol NetworkService {
+    func fetchData() -> String
+}
+
+class APIService: NetworkService {
+    func fetchData() -> String {
+        return "Data from server"
+    }
+}
+
+class ViewModel {
+    private let service: NetworkService
+    
+    // Inject the dependency through the initializer
+    init(service: NetworkService) {
+        self.service = service
+    }
+    
+    func getData() -> String {
+        service.fetchData()
+    }
+}
+
+// Inject manually
+let service = APIService()
+let viewModel = ViewModel(service: service)
+```
+
+
+✅ No framework used — you’re doing manual DI.
+- The key idea: ViewModel doesn’t create APIService itself.
+Instead, it receives it — that’s dependency injection.
+
+# 🧰 Dependency Injection Framework — The Tool
+A Dependency Injection framework automates the injection process.
+Instead of manually wiring dependencies, the framework:
+- Builds and manages dependency graphs.
+- Ensures the correct lifecycle (singleton, transient, etc.).
+- Resolves complex dependencies automatically.
+
+#### ⚙️ Example – Using a DI Framework (Needle)
+
+```
+// 1️⃣ Define the dependency protocol
+protocol HomeDependency: Dependency {
+    var networkService: NetworkService { get }
+}
+
+// 2️⃣ Create a component
+class HomeComponent: Component<HomeDependency>, HomeDependency {
+    var networkService: NetworkService {
+        return APIService()
+    }
+    
+    var viewModel: HomeViewModel {
+        return HomeViewModel(service: networkService)
+    }
+}
+
+// 3️⃣ Use the component to inject automatically
+let component = HomeComponent(parent: appComponent)
+let homeViewModel = component.viewModel
+```
+
+
+✅ Needle automatically handles:
+- Creation and lifetime of objects.
+- Building dependency graphs.
+- Ensuring compile-time safety.
+
+![Screenshot 2025-11-11 at 5 38 56 PM](https://github.com/user-attachments/assets/e02e746f-81ed-4d66-9fe5-1331e023b391)
+
+## 🧩 Common DI Frameworks in Swift
+![Screenshot 2025-11-11 at 6 09 16 PM](https://github.com/user-attachments/assets/5270e6d0-593a-4898-beba-b9a5ec1bc56e)
+
+# 🧠 When to Use Each
+- Manual DI:
+  - ✅ For small to medium apps.
+  - ✅ When you want full control and simplicity.
+
+- DI Framework:
+  - ✅ For large, modular projects with many dependencies.
+  - ✅ When you want automation and compile-time safety.

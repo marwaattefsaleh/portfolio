@@ -1,0 +1,250 @@
+---
+title: "The SOLID Principles"
+description: "The SOLID principles are five design guidelines that help you write scalable, maintainable, and testable Swift code."
+pubDate: 2026-08-14
+tags: ["Design Patterns","Architecture","OOP"]
+emoji: "🏗️"
+---
+
+The SOLID principles are five design guidelines that help you write scalable, maintainable, and testable Swift code.
+They are especially useful in Clean Architecture and MVVM patterns common in iOS development.
+
+# 🧩 1. Single Responsibility Principle (SRP)
+#### Definition
+- A class, struct, or function should have only one reason to change.
+- Each Swift type should handle one specific responsibility — not multiple unrelated ones.
+
+#### Why It Matters
+- Easier to understand and maintain.
+- Easier to test and debug.
+- Encourages reusability and modularity.
+
+#### Bad Example
+
+```
+class UserManager {
+    func fetchUser() -> User { /* Networking code */ }
+    func saveUser(_ user: User) { /* Database saving code */ }
+    func navigateToProfile(_ user: User) { /* UI navigation code */ }
+}
+```
+
+
+🚫 This class handles networking, persistence, and navigation — too many responsibilities.
+
+#### Good Example
+
+```
+class UserService {
+    func fetchUser() -> User { /* Networking only */ }
+}
+
+class UserRepository {
+    func saveUser(_ user: User) { /* Persistence only */ }
+}
+
+class UserRouter {
+    func navigateToProfile(_ user: User) { /* Navigation only */ }
+}
+```
+
+
+✅ Each class has one reason to change.
+
+# 🚪 2. Open/Closed Principle (OCP)
+#### Definition
+- Software entities should be open for extension, but closed for modification.
+- You should be able to add new behavior without changing existing code.
+
+#### Bad Example
+
+```
+class PaymentProcessor {
+    func process(type: String) {
+        if type == "CreditCard" {
+            print("Processing credit card")
+        } else if type == "PayPal" {
+            print("Processing PayPal")
+        }
+    }
+}
+```
+
+
+🚫 Adding a new payment type means editing this class — violating OCP.
+
+#### Good Example
+
+```
+protocol PaymentMethod {
+    func process()
+}
+
+class CreditCardPayment: PaymentMethod {
+    func process() { print("Credit Card payment") }
+}
+
+class PayPalPayment: PaymentMethod {
+    func process() { print("PayPal payment") }
+}
+
+class PaymentProcessor {
+    func process(payment: PaymentMethod) {
+        payment.process()
+    }
+}
+```
+
+
+✅ Add new payment types by extending, not modifying.
+
+# 🧬 3. Liskov Substitution Principle (LSP)
+#### Definition
+- Subtypes must be substitutable for their base types without breaking functionality.
+- If B inherits or conforms to A, it should behave correctly when used in place of A.
+
+#### Bad Example
+
+```
+class Bird {
+    func fly() {}
+}
+
+class Penguin: Bird {
+    override func fly() {
+        fatalError("Penguins can't fly!")
+    }
+}
+```
+
+
+🚫 Penguin cannot behave like a Bird, violating LSP.
+
+#### Good Example
+
+```
+protocol Bird {
+    func move()
+}
+
+class FlyingBird: Bird {
+    func move() { print("Flying") }
+}
+
+class Penguin: Bird {
+    func move() { print("Swimming") }
+}
+```
+
+
+✅ Every subclass or conforming type can replace the base type safely.
+
+# 🎚️ 4. Interface Segregation Principle (ISP)
+#### Definition
+- Clients shouldn’t be forced to depend on interfaces they don’t use.
+- Instead of large protocols, create small, focused ones.
+
+#### Bad Example
+
+```
+protocol Worker {
+    func code()
+    func test()
+    func manageTeam()
+}
+
+class Developer: Worker {
+    func code() {}
+    func test() {}
+    func manageTeam() { /* not needed */ }
+}
+```
+
+
+🚫 The developer is forced to implement irrelevant methods.
+
+#### Good Example
+
+```
+protocol Coder {
+    func code()
+}
+
+protocol Tester {
+    func test()
+}
+
+protocol Manager {
+    func manageTeam()
+}
+
+class Developer: Coder, Tester {
+    func code() {}
+    func test() {}
+}
+
+class TeamLead: Coder, Tester, Manager {
+    func code() {}
+    func test() {}
+    func manageTeam() {}
+}
+```
+
+
+✅ Each class implements only what it needs.
+
+# 🔌 5. Dependency Inversion Principle (DIP)
+#### Definition
+- High-level modules should not depend on low-level modules.
+- Both should depend on abstractions (protocols).
+
+This principle encourages loose coupling between components.
+
+#### Bad Example
+
+```
+class NetworkManager {
+    func fetchData() -> String { "Data from API" }
+}
+
+class ViewModel {
+    let networkManager = NetworkManager()
+    func loadData() { print(networkManager.fetchData()) }
+}
+```
+
+
+🚫 ViewModel is tightly coupled to NetworkManager.
+
+#### Good Example
+
+```
+protocol NetworkService {
+    func fetchData() -> String
+}
+
+class NetworkManager: NetworkService {
+    func fetchData() -> String { "Data from API" }
+}
+
+class MockNetworkManager: NetworkService {
+    func fetchData() -> String { "Mock Data" }
+}
+
+class ViewModel {
+    private let service: NetworkService
+    init(service: NetworkService) {
+        self.service = service
+    }
+
+    func loadData() {
+        print(service.fetchData())
+    }
+}
+```
+
+
+✅ The ViewModel depends on the protocol, not a concrete type.
+Easier to test and swap implementations.
+
+![Screenshot 2025-11-11 at 4 31 13 PM](https://github.com/user-attachments/assets/8690d3dd-af8e-4f21-8487-69ec47be74f3)

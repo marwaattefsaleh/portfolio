@@ -1,0 +1,366 @@
+---
+title: "Operation and OperationQueue"
+description: "A complete guide on Operation, OperationQueue, concurrency control, dependencies, cancellation, priorities, QoS, custom operations, and comparison…"
+pubDate: 2026-08-14
+tags: ["Swift","Concurrency","OperationQueue"]
+emoji: "⏳"
+---
+
+A complete guide on **Operation**, **OperationQueue**, concurrency control, dependencies, cancellation, priorities, QoS, custom operations, and comparison with GCD.
+
+---
+
+# 1. What is Operation?
+
+`Operation` (now `Operation` in Swift) is a high-level abstraction on top of GCD, designed for **structured**, **controlled**, and **cancelable** asynchronous work.
+
+### Key benefits:
+
+- Supports **operation dependencies**
+
+- Supports **cancellation** (GCD doesn’t)
+
+- Supports **priorities** & **Quality of Service (QoS)**
+
+- Can be **reused**, **paused**, **resumed**
+
+- Thread-safe by design
+
+---
+
+# 2. What is OperationQueue?
+
+`OperationQueue` schedules and manages multiple operations concurrently.
+
+### Features:
+
+- Max concurrent operations
+
+- Cancel all operations
+
+- Add dependencies
+
+- Thread-safe
+
+- Uses GCD internally
+
+---
+
+# 3. Types of Operations
+
+## 1. BlockOperation
+
+Simple operation with a closure.
+
+```swift
+let op = BlockOperation {
+    print("Task running")
+}
+```
+
+
+You can add multiple execution blocks:
+
+```swift
+op.addExecutionBlock { ... }
+```
+
+
+All blocks can run **in parallel**.
+
+## 2. Custom Operation
+
+Subclass `Operation` for advanced behaviors.
+
+```swift
+class MyOperation: Operation {
+    override func main() {
+        if isCancelled { return }
+        print("Running custom operation")
+    }
+}
+```
+
+
+---
+
+# 4. Operation Lifecycle
+
+Operations transition through states:
+
+```swift
+isReady → isExecuting → isFinished
+```
+
+
+Optional:
+
+```swift
+isCancelled
+```
+
+
+Custom subclasses must manually manage state if asynchronous.
+
+---
+
+# 5. Operation Dependencies
+
+Operations can wait for other operations.
+
+```swift
+let op1 = BlockOperation { print("Fetch data") }
+let op2 = BlockOperation { print("Parse data") }
+
+op2.addDependency(op1)
+```
+
+
+Flow:
+
+```swift
+Op1 → Op2 → Op3
+```
+
+
+Ensures correct execution order.
+
+---
+
+# 6. OperationQueue Usage
+
+```swift
+let queue = OperationQueue()
+queue.maxConcurrentOperationCount = 3
+
+queue.addOperation(op)
+```
+
+
+### Useful APIs:
+
+```swift
+queue.cancelAllOperations()
+queue.isSuspended = true
+queue.addOperations([op1, op2], waitUntilFinished: false)
+```
+
+
+---
+
+# 7. Max Concurrent Operation Count
+
+Controls parallelism:
+
+- `1` → serial queue
+
+- `>1` → concurrent queue
+
+- `-1` → system decides
+
+---
+
+# 8. Quality of Service (QoS)
+
+QoS defines the priority of operations.
+
+Levels:
+
+- `.userInteractive`
+
+- `.userInitiated`
+
+- `.utility`
+
+- `.background`
+
+```swift
+op.qualityOfService = .userInitiated
+```
+
+
+---
+
+# 9. Cancellation Support
+
+Operations can be cancelled.
+
+```swift
+op.cancel()
+```
+
+
+In custom operations:
+
+```swift
+if isCancelled { return }
+```
+
+
+**Important:** Cancellation is **cooperative**, not forced.
+
+---
+
+# 10. Asynchronous Operations
+
+To create a true async operation, you must subclass `Operation` and override state management.
+
+Example skeleton:
+
+```swift
+class AsyncOperation: Operation {
+    private var _executing = false
+    override var isExecuting: Bool { _executing }
+
+    private var _finished = false
+    override var isFinished: Bool { _finished }
+
+    override var isAsynchronous: Bool { true }
+
+    override func start() {
+        if isCancelled { finish(); return }
+        _executing = true
+        main()
+    }
+
+    override func main() {
+        // Perform async work
+    }
+
+    func finish() {
+        _executing = false
+        _finished = true
+    }
+}
+```
+
+
+---
+
+# 11. Common Use Cases
+
+### 1. Networking Pipelines
+
+- Fetch → Parse → Save operations with dependencies
+
+### 2. Image Processing
+
+- Parallel image downloads
+
+- Throttling using queue max concurrency
+
+### 3. Offline Sync Systems
+
+- Retry logic
+
+- Pause/resume based on connectivity
+
+### 4. Heavy CPU Tasks
+
+- Decoding
+
+- Machine learning preprocessing
+
+---
+
+# 12. Operation vs GCD
+
+Feature | GCD | Operation
+-- | -- | --
+Dependencies | ❌ | ✅
+Cancellation | ❌ | ✅
+Priority/QoS | Medium | Strong
+Pause/Resume | ❌ | ✅
+Reusability | ❌ | ✅
+Structured pipeline | ❌ | ✅
+Thread safety | Manual | Automatic
+
+Use **OperationQueue** when you need control.
+
+Use **GCD** for lightweight async work.
+
+---
+
+# 13. When Should You Use Operation?
+
+### Choose Operation when:
+
+- You need **dependencies** between asynchronous tasks
+
+- You want **cancellation** support
+
+- You need **priority** control
+
+- You’re building **pipelines** (download → parse → save)
+
+- You need **pause/resume** functionality
+
+### Choose GCD when:
+
+- Simple async execution
+
+- Fire-and-forget tasks
+
+- UI updates dispatched to main queue
+
+---
+
+# 14. Combining Operation With Modern Swift
+
+### With Combine
+
+- Each operation can publish changes
+
+### With async/await
+
+You can wrap async functions inside Operation.
+
+```swift
+class AsyncWrapperOperation: Operation {
+    override func main() {
+        Task {
+            let result = try await fetchMovies()
+            print(result)
+        }
+    }
+}
+```
+
+
+---
+
+# 15. Examples of Operation Pipelines
+
+## Network → Parse → Cache
+
+```swift
+FetchOperation → ParseOperation → SaveToDiskOperation
+```
+
+
+Add dependencies and add all to queue.
+
+## Example Code
+
+```swift
+opParse.addDependency(opFetch)
+opSave.addDependency(opParse)
+queue.addOperations([opFetch, opParse, opSave], waitUntilFinished: false)
+```
+
+
+---
+
+# 16. Best Practices
+
+- Always check `isCancelled`
+
+- Use dependencies instead of callback chaining
+
+- Keep Operation small (SRP)
+
+- Prefer OperationQueue for pipelines
+
+- Avoid overriding `start()` unless needed
+
+- Use asynchronous operation template for long tasks

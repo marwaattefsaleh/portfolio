@@ -1,0 +1,212 @@
+---
+title: "Struct init vs Class init vs convenience init"
+description: "⚠️ Defining a custom init removes the memberwise initializer (unless you keep it explicitly)."
+pubDate: 2026-08-14
+tags: ["Swift","OOP","Initialization"]
+emoji: "🔧"
+---
+
+## 1️⃣ struct Initializer
+
+### Key Rules
+
+- Gets a **memberwise initializer for free**
+
+- No inheritance
+
+- No `convenience init`
+
+- Must initialize **all stored properties**
+
+- Value type (copy semantics)
+
+### Example
+
+```
+struct Person {
+   var name: String
+   var age: Int
+}
+
+// Auto-generated:
+Person(name: "Ahmed", age: 30)
+```
+
+
+### Custom Init
+
+```swift
+struct Person {
+    var name: String
+    var age: Int
+
+    init(name: String) {
+        self.name = name
+        self.age =0
+    }
+}
+```
+
+
+⚠️ Defining a custom `init` **removes** the memberwise initializer (unless you keep it explicitly).
+
+---
+
+### When to Use Struct Init
+
+- Data models
+
+- DTOs
+
+- Value semantics required
+
+- Thread-safe by default
+
+---
+
+## 2️⃣ Class Designated Initializer (init)
+
+### Key Rules
+
+- ❌ No auto memberwise initializer
+
+- Supports inheritance
+
+- Uses **two-phase initialization**
+
+- Reference type (ARC-managed)
+
+### Example
+
+```
+class Person {
+    var name: String
+    var age: Int
+
+   init(name: String, age: Int) {
+        self.name = name
+        self.age = age
+    }
+}
+```
+
+
+---
+
+### Two-Phase Initialization (Interview Favorite 🔥)
+
+**Phase 1**
+
+- Initialize all stored properties of the class
+
+**Phase 2**
+
+- `self` is now fully initialized
+
+- Safe to access methods / properties
+
+---
+
+### When to Use Class Init
+
+- Identity matters
+
+- Shared mutable state
+
+- Inheritance required
+
+- ARC lifecycle needed
+
+---
+
+## 3️⃣ convenience init (Classes Only)
+
+### Purpose
+
+- Secondary / helper initializer
+
+- Must call another initializer in the **same class**
+
+- Cannot call `super.init` directly
+
+### Example
+
+```
+class Person{
+    var name: String
+    var age: Int
+
+    init(name: String, age: Int) {
+       self.name = name
+       self.age = age
+    }
+
+   convenience init(name: String) {
+       self.init(name: name, age: 0)
+    }
+}
+```
+
+
+---
+
+### Rules (Must Memorize for Interviews)
+
+![Screenshot 2026-02-15 at 2 26 30 AM](https://github.com/user-attachments/assets/316920b2-bb4a-4e68-94c3-9634089c0ac9)
+
+### Designated vs Convenience (Class Only)
+
+```
+Designated init
+   ↑
+Convenience init
+```
+
+
+- Designated initializers do the real work
+- Convenience initializers are shortcuts
+
+### Struct vs Class vs Convenience Init (Comparison Table)
+![Screenshot 2026-02-15 at 2 27 26 AM](https://github.com/user-attachments/assets/c02d8c9c-ed66-48c2-90bb-d0a1057057ba)
+
+---
+
+## Common Interview Questions 🔥
+
+### Q: Why no convenience init in structs?
+
+**Answer:**
+
+Structs don’t support inheritance or initializer delegation chains.
+
+---
+
+### Q: Why must convenience init call another init?
+
+**Answer:**
+
+To guarantee full initialization before use and maintain two-phase safety.
+
+---
+
+### Q: Can a subclass override a convenience init?
+
+**Answer:**
+
+❌ No — only designated initializers can be overridden.
+
+---
+
+### Q: Can a struct have multiple initializers?
+
+**Answer:**
+
+✅ Yes, but custom inits remove the synthesized memberwise one.
+
+---
+
+## Interview One-Liner (Gold Answer 🥇)
+
+“Struct initializers are simple and value-based, class initializers enforce two-phase initialization, and convenience initializers exist only to provide safer shortcuts on top of designated initializers.”
+
+---

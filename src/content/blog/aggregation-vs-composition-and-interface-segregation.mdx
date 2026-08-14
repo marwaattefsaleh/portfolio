@@ -1,0 +1,129 @@
+---
+title: "Aggregation vs Composition (and Interface Segregation)"
+description: "In Object-Oriented Programming (OOP), classes often collaborate with each other."
+pubDate: 2026-08-14
+tags: ["Swift","OOP","Design"]
+emoji: "🧩"
+---
+
+In Object-Oriented Programming (OOP), classes often collaborate with each other.
+These collaborations can take different forms — association, aggregation, and composition.
+
+Understanding their differences helps design clean, flexible, and memory-safe architectures.
+
+Let’s break it down step by step.
+
+# 🔹 1. Association (the broadest relationship)
+- Definition:
+Association is a general relationship between two objects where one object uses another.
+Neither owns nor depends on the other for its lifecycle.
+
+💡 Think of it as “A knows B exists.”
+
+- Example:
+
+```
+class Teacher {
+    var name: String
+    init(name: String) { self.name = name }
+    
+    func teach(student: Student) {
+        print("\(name) teaches \(student.name)")
+    }
+}
+
+class Student {
+    var name: String
+    init(name: String) { self.name = name }
+}
+
+let teacher = Teacher(name: "Marwa")
+let student = Student(name: "Ali")
+teacher.teach(student: student)
+```
+
+
+- Both Teacher and Student exist independently.
+- No ownership or lifecycle dependency.
+
+# 2. Aggregation (Has-A relationship)
+- Definition:
+Aggregation is a special type of association where one object contains a reference to another, but does not own it.
+The contained object can live independently of the container.
+
+💡 Think: “A has a B, but B can exist without A.”
+
+- Example:
+
+```
+class Department {
+    var name: String
+    var teachers: [Teacher] = []
+    
+    init(name: String) {
+        self.name = name
+    }
+}
+
+class Teacher {
+    var name: String
+    init(name: String) { self.name = name }
+}
+
+let teacher = Teacher(name: "Sara")
+let department = Department(name: "Science")
+department.teachers.append(teacher)
+```
+
+
+- Department has Teacher objects.
+- But if Department is deallocated, the Teacher objects can still exist elsewhere.
+- It’s a weak ownership relationship.
+
+  - 🧠 In Swift:
+You often model this with weak or unowned references when avoiding strong retain cycles:
+
+```
+weak var teacher: Teacher?
+```
+
+
+# 🔹 3. Composition (Strong Has-A relationship)
+
+- Definition:
+Composition is a stronger form of aggregation where one object owns another object.
+If the container is deallocated, its children are deallocated too.
+
+💡 Think: “A owns B — if A dies, B dies too.”
+
+- Example:
+
+```
+class Engine {
+    func start() {
+        print("Engine started")
+    }
+}
+
+class Car {
+    var engine = Engine() // Composition — Car owns Engine
+}
+
+var car: Car? = Car()
+car?.engine.start()
+car = nil // Both Car and Engine are deallocated
+```
+
+
+- Car creates and owns its Engine.
+- When the Car is deallocated, Engine is deallocated automatically.
+- Strong lifecycle dependency.
+
+# ⚙️ Aggregation vs Composition (Comparison Table)
+![Screenshot 2025-11-12 at 9 06 53 PM](https://github.com/user-attachments/assets/66908613-02c8-40f6-91a8-c15abe2b019c)
+
+# Real iOS Examples
+![Screenshot 2025-11-12 at 9 13 19 PM](https://github.com/user-attachments/assets/6e7ad5f3-913c-4c4c-9c60-3271bd1768ae)
+
+# 🧠 Summary
+![Screenshot 2025-11-12 at 9 12 56 PM](https://github.com/user-attachments/assets/aba51365-ee32-4ab2-abe7-339528d5d5f5)

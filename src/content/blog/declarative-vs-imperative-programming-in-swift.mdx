@@ -1,0 +1,182 @@
+---
+title: "Declarative vs Imperative Programming in Swift"
+description: "Swift allows you to write code in different paradigms. Understanding the distinction between imperative and declarative programming is key to writi…"
+pubDate: 2026-08-14
+tags: ["Swift","Programming Paradigms"]
+emoji: "🎛️"
+---
+
+Swift allows you to write code in different paradigms. Understanding the distinction between imperative and declarative programming is key to writing clean, maintainable Swift code. Additionally, Functional Programming (FP) is a type of declarative style that Swift fully supports.
+
+# 1️⃣ Imperative Programming
+- Definition:
+In imperative programming, you describe how to perform tasks, step by step.
+You tell the program exactly what to do and how to do it.
+
+- Characteristics:
+  - Focus on control flow: loops, conditions, and explicit instructions.
+  - Uses mutable state extensively.
+  - Often requires manual management of intermediate states.
+
+- Swift Example: Sum an Array Imperatively
+
+```
+let numbers = [1, 2, 3, 4, 5]
+var sum = 0
+for number in numbers {
+    sum += number
+}
+print(sum) // 15
+```
+
+
+- We manually iterate, update a variable, and accumulate a result.
+- The focus is on how the result is computed.
+
+- Swift Example: Filter Names Imperatively
+
+```
+let names = ["Alice", "Bob", "Charlie", "Dan"]
+var shortNames: [String] = []
+
+for name in names {
+    if name.count <= 3 {
+        shortNames.append(name)
+    }
+}
+print(shortNames) // ["Bob", "Dan"]
+```
+
+
+Again, we explicitly control the loop and state updates.
+
+# 2️⃣ Declarative Programming
+- Definition:
+In declarative programming, you describe what you want to achieve, and the system handles the how.
+Focus is on outcomes, not steps.
+
+- Characteristics:
+  - Prefer immutable state.
+  - Typically uses higher-order functions or declarative frameworks.
+  - Often concise and readable, reducing boilerplate.
+
+- Swift Example: Sum an Array Declaratively
+
+```
+let numbers = [1, 2, 3, 4, 5]
+let sum = numbers.reduce(0, +)
+print(sum) // 15
+```
+
+
+We declare “sum the array” and let Swift handle iteration.
+
+- Swift Example: Filter Names Declaratively
+
+```
+let names = ["Alice", "Bob", "Charlie", "Dan"]
+let shortNames = names.filter { $0.count <= 3 }
+print(shortNames) // ["Bob", "Dan"]
+```
+
+
+We declare the goal (filter short names) without managing loops or state.
+
+- SwiftUI Example: Declarative UI
+
+```
+struct ContentView: View {
+    @State private var count = 0
+
+    var body: some View {
+        VStack {
+            Text("Count: \(count)")
+            Button("Increment") {
+                count += 1
+            }
+        }
+    }
+}
+```
+
+
+- You declare what the UI should look like for a given state (count).
+- SwiftUI automatically updates the view when state changes.
+
+# 3️⃣ Key Differences: Imperative vs Declarative
+![Screenshot 2025-11-12 at 8 39 37 PM](https://github.com/user-attachments/assets/dc9961bf-a942-43b6-b598-acb7132a53d7)
+
+# 4️⃣ Functional Programming as a Type of Declarative
+Functional Programming (FP) is a subset of declarative programming.
+
+- FP emphasizes:
+  - Pure functions: Output depends only on input, no side effects.
+  - Immutability: Avoid mutating data; create new values instead.
+  - Higher-order functions: Functions that take or return other functions.
+  - Function composition: Build complex operations by combining small, reusable functions.
+
+- Swift Example: Functional / Declarative
+
+```
+let names = ["Alice", "Bob", "Charlie", "Dan"]
+let shortNamesUppercased = names
+    .filter { $0.count <= 3 }
+    .map { $0.uppercased() }
+
+print(shortNamesUppercased) // ["BOB", "DAN"]
+```
+
+
+- You declare the goal (filter and transform) rather than manually looping.
+- The code is readable, concise, and free from side effects.
+
+#### SwiftUI and FP:
+SwiftUI is declarative, and using pure functions and immutable state aligns with functional programming principles.
+
+Functional style fits perfectly with SwiftUI’s reactive UI updates.
+
+### ✅ Core Principles:
+
+# 3️⃣ The Relationship Between Declarative and Functional
+You can think of them hierarchically:
+
+```
+Programming Paradigms
+│
+├── Imperative
+│   └── (Focus on How)
+│
+└── Declarative
+    ├── Functional (Focus on Pure Functions & Immutability)
+    ├── Logic (Focus on Rules, e.g., Prolog)
+    └── Reactive (Focus on Data Flow, e.g., Combine, RxSwift)
+```
+
+
+![Screenshot 2025-11-12 at 8 53 22 PM](https://github.com/user-attachments/assets/333a300f-e252-4e31-a48e-29fee48ccc1b)
+
+- Example (Declarative but Not Functional):
+
+```
+let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "User")
+fetchRequest.predicate = NSPredicate(format: "age > %d", 20)
+let users = try context.fetch(fetchRequest)
+```
+
+
+- This is declarative, since you describe what data you want (users over 20).
+- But it’s not functional, since Core Data has side effects and mutable state.
+
+# 5️⃣ Best Practices in Swift
+- Use immutable let variables whenever possible.
+- Prefer higher-order functions over manual loops.
+- Keep functions pure: no external side effects.
+- Use SwiftUI declarative syntax for UI instead of manually managing views.
+- Combine declarative and functional styles for concise, maintainable code.
+
+# 6️⃣ Summary
+- Imperative: Step-by-step instructions, mutable state, manual control.
+- Declarative: Describe the desired outcome, system handles execution, often uses immutability.
+- Functional: A type of declarative programming focused on pure functions, immutability, and higher-order functions.
+
+Swift encourages declarative and functional approaches for cleaner, safer, and more maintainable code.

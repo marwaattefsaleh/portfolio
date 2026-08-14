@@ -1,0 +1,138 @@
+---
+title: "Immutable vs Mutable in Swift"
+description: "Swift encourages immutability — designing code where values cannot be changed after creation — because it leads to safer, more predictable, and thr…"
+pubDate: 2026-08-14
+tags: ["Swift","Value Types"]
+emoji: "🔒"
+---
+
+Swift encourages immutability — designing code where values cannot be changed after creation — because it leads to safer, more predictable, and thread-safe programs.
+
+Let’s explore what immutable and mutable mean, how they differ, and how Swift handles both for variables, collections, structs, and classes.
+
+# What Does “Immutable” Mean?
+Immutable means that once a value is set, it cannot be modified.
+
+- 💡 Analogy:
+
+Think of an immutable object as a sealed box — you can read what’s inside but can’t replace or modify the contents.
+
+- ✅ Immutable Declaration Example
+
+```
+let name = "Marwa"
+name = "Ali" // ❌ Error: Cannot assign to value: 'name' is a 'let' constant
+```
+
+
+let declares an immutable constant — the reference or value it holds cannot change.
+
+# What Does “Mutable” Mean?
+
+Mutable means that the value can be changed after it’s created.
+
+- ✅ Mutable Declaration Example
+
+```
+var age = 25
+age = 26 // ✅ Allowed
+```
+
+
+var declares a mutable variable — you can reassign or modify its contents.
+
+# Mutability in Structs (Value Types)
+In Swift, struct, enum, and tuple are value types — they are copied when passed around.
+
+- 📘 Example
+
+```
+struct Point {
+    var x: Int
+    var y: Int
+}
+
+var p1 = Point(x: 10, y: 20)
+p1.x = 15 // ✅ Works (mutable variable)
+
+let p2 = Point(x: 5, y: 10)
+// p2.x = 8 ❌ Error: Cannot modify because p2 is declared with `let`
+```
+
+
+Even though Point’s properties are var, the instance p2 is a constant — so you cannot modify any property of it.
+
+- 🧠 Why?
+Swift enforces deep immutability for value types declared with let.
+
+# Mutability in Classes (Reference Types)
+class types behave differently — they are reference types.
+Declaring a class instance with let doesn’t make the object immutable — it only makes the reference constant, not the object’s internal state.
+
+- 📘 Example
+
+```
+class User {
+    var name: String
+    init(name: String) { self.name = name }
+}
+
+let user = User(name: "Sara")
+user.name = "Marwa" // ✅ Allowed
+// user = User(name: "Ali") ❌ Error: Cannot reassign constant reference
+```
+
+
+So:
+- You cannot reassign user
+- But you can modify its mutable properties
+
+# Mutability in Collections
+Mutability of arrays, dictionaries, and sets depends on whether the variable is declared with var or let.
+
+- 📘 Mutable Collection
+
+```
+var numbers = [1, 2, 3]
+numbers.append(4) // ✅ Allowed
+```
+
+
+- 📘 Immutable Collection
+
+```
+let numbers = [1, 2, 3]
+numbers.append(4) // ❌ Error: Cannot modify immutable value
+```
+
+
+# Comparison Table
+![Screenshot 2025-11-12 at 10 10 58 PM](https://github.com/user-attachments/assets/57155bc7-128f-498c-8161-d910a7fb3dec)
+
+# Why Prefer Immutability
+![Screenshot 2025-11-12 at 10 12 49 PM](https://github.com/user-attachments/assets/8a12604d-8888-4e03-9634-f9061460aadd)
+
+# Mutating Methods in Structs
+In value types (struct/enum), if a method changes a property, it must be marked as mutating.
+
+```
+struct Counter {
+    var value = 0
+    
+    mutating func increment() {
+        value += 1
+    }
+}
+
+var counter = Counter()
+counter.increment() // ✅ Works
+
+let fixedCounter = Counter()
+// fixedCounter.increment() ❌ Error: Cannot call mutating method on immutable value
+```
+
+
+## 🚀 In SwiftUI and Functional Swift
+Frameworks like SwiftUI and Combine rely heavily on immutability:
+- View structs are immutable — instead of changing them, you create new views when state updates.
+- This leads to predictable UI updates and safe multithreading.

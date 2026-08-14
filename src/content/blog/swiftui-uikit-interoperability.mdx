@@ -1,0 +1,265 @@
+---
+title: "SwiftUI and UIKit Interoperability"
+description: "A complete guide to using UIKit inside SwiftUI and SwiftUI inside UIKit."
+pubDate: 2026-08-14
+tags: ["SwiftUI","UIKit","Interoperability"]
+emoji: "🤝"
+---
+
+A complete guide to using UIKit inside SwiftUI and SwiftUI inside UIKit.
+This is essential when migrating from UIKit, reusing old modules, or accessing missing SwiftUI APIs.
+
+SwiftUI provides two protocols to embed UIKit components:
+- UIViewRepresentable → Wraps UIView
+- UIViewControllerRepresentable → Wraps UIViewController
+
+## 1.1 Embedding a UIKit UIView (UIViewRepresentable)
+
+Use this when you need to embed components like:
+- UILabel
+- UITextField
+- UIScrollView
+- UIActivityIndicatorView
+
+**Structure**
+
+```
+struct YourUIViewWrapper: UIViewRepresentable {
+    func makeUIView(context: Context) -> UIView { ... }
+    func updateUIView(_ uiView: UIView, context: Context) { ... }
+}
+```
+
+
+- Example: UILabel in SwiftUI
+
+```
+struct UIKitLabel: UIViewRepresentable {
+    var text: String
+    
+    func makeUIView(context: Context) -> UILabel {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 24)
+        return label
+    }
+    
+    func updateUIView(_ uiView: UILabel, context: Context) {
+        uiView.text = text
+    }
+}
+```
+
+
+**Usage**
+
+```
+struct ContentView: View {
+    var body: some View {
+        UIKitLabel(text: "Hello from UIKit")
+    }
+}
+```
+
+
+## 1.2 Embedding a UIKit ViewController (UIViewControllerRepresentable)
+Use it for:
+- UIImagePickerController
+- UIActivityViewController
+- MFMailComposeViewController
+- UIPageViewController
+
+**Structure**
+
+```
+struct YourVCWrapper: UIViewControllerRepresentable {
+    func makeUIViewController(context: Context) -> UIViewController
+    func updateUIViewController(_ controller: UIViewController, context: Context)
+}
+```
+
+
+- Example: Image Picker
+
+```
+struct ImagePicker: UIViewControllerRepresentable {
+    @Environment(\.dismiss) var dismiss
+    var onSelect: (UIImage) -> Void
+    
+    func makeUIViewController(context: Context) -> UIImagePickerController {
+        let picker = UIImagePickerController()
+        picker.delegate = context.coordinator
+        return picker
+    }
+    
+    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+    
+    class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+        let parent: ImagePicker
+        
+        init(_ parent: ImagePicker) { self.parent = parent }
+        
+        func imagePickerController(
+            _ picker: UIImagePickerController,
+            didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]
+        ) {
+            if let image = info[.originalImage] as? UIImage {
+                parent.onSelect(image)
+            }
+            parent.dismiss()
+        }
+    }
+}
+```
+
+
+## 1.3 Understanding Coordinator
+Coordinator acts as a:
+- Delegate (e.g., UITextFieldDelegate)
+- Target–action handler
+- Data bridge from UIKit → SwiftUI
+- Create it when you need callbacks.
+
+## 1.4 Best Practices for UIKit→SwiftUI
+- ✔ Use updateUIView for dynamic changes
+- ✔ Put delegates inside Coordinator
+- ✔ Use @Binding to send values back
+- ✔ Use Environment for dismissal
+- ✔ Avoid heavy logic inside representables
+
+# ⭐️ 2. Using SwiftUI Inside UIKit
+
+You use UIHostingController to embed a SwiftUI view inside UIKit.
+
+## 2.1 Embedding SwiftUI view inside a UIViewController
+Example
+
+```
+let swiftUIView = ContentView()
+let hosting = UIHostingController(rootView: swiftUIView)
+addChild(hosting)
+
+view.addSubview(hosting.view)
+hosting.view.frame = view.bounds
+hosting.didMove(toParent: self)
+```
+
+
+## 2.2 Embedding SwiftUI into Storyboards / XIB
+
+- Add a UIView placeholder in storyboard
+- In your ViewController:
+
+```
+class MyViewController: UIViewController {
+    @IBOutlet weak var containerView: UIView!
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        let swiftUIView = ContentView()
+        let hosting = UIHostingController(rootView: swiftUIView)
+        
+        addChild(hosting)
+        hosting.view.frame = containerView.bounds
+        containerView.addSubview(hosting.view)
+        hosting.didMove(toParent: self)
+    }
+}
+```
+
+
+## 2.3 Passing data from UIKit → SwiftUI
+- Using initializers:
+
+```
+let hosting = UIHostingController(rootView: ProfileView(name: "Marwa"))
+```
+
+
+- Using bindings:
+SwiftUI:
+
+```
+struct ProfileView: View {
+    @Binding var username: String
+}
+```
+
+
+UIKit:
+
+```
+var username = "Marwa"
+let hosting = UIHostingController(rootView: ProfileView(username: $username))
+```
+
+
+## 2.4 Passing data from SwiftUI → UIKit
+
+Use a callback closure:
+
+**SwiftUI**:
+
+```
+struct LoginView: View {
+    var onLogin: (String) -> Void
+}
+```
+
+
+**UIKit**:
+
+```
+let hosting = UIHostingController(
+    rootView: LoginView { username in
+        print("Logged in:", username)
+    }
+)
+```
+
+
+## ⭐️ 3. When to Use Which?
+✔ Use UIKit → SwiftUI when:
+- You need a UIKit control not yet available in SwiftUI
+- You are migrating legacy UIKit modules
+- You need precise layout/scroll control
+
+✔ Use SwiftUI → UIKit when:
+- You have an old app and want to insert new SwiftUI screens
+- You want to experiment with SwiftUI in a UIKit project
+- You want to gradually migrate
+
+## ⭐️ 4. Common Pitfalls & Solutions
+- ⚠ UIKit view not updating
+  - ➡ Ensure you update state in updateUIView.
+- ⚠ Gesture recognizers conflicting
+  - ➡ Use .allowsHitTesting(false) in SwiftUI wrapper.
+- ⚠ UIKit delegates not called
+  - ➡ Ensure coordinator is assigned:
+
+```
+picker.delegate = context.coordinator
+```
+
+
+- ⚠ Layout issues in hosting controller
+  - ➡ Use constraints:
+
+```
+hosting.view.translatesAutoresizingMaskIntoConstraints = false
+NSLayoutConstraint.activate([
+    hosting.view.topAnchor.constraint(equalTo: container.topAnchor),
+    hosting.view.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+    hosting.view.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+    hosting.view.trailingAnchor.constraint(equalTo: container.trailingAnchor)
+])
+```
+
+
+## ⭐️ 5. Summary Table
+
+![Screenshot 2025-11-24 at 2 12 03 AM](https://github.com/user-attachments/assets/2d5a4c7b-4365-4678-8505-dad6c43f79f2)

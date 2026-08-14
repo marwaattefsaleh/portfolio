@@ -1,0 +1,317 @@
+---
+title: "Common iOS Crash Types and What Causes Them"
+description: "A detailed reference for understanding common crash types in iOS apps, why they happen, and how to prevent them."
+pubDate: 2026-08-14
+tags: ["iOS","Debugging","Reliability"]
+emoji: "💥"
+---
+
+A detailed reference for understanding common crash types in iOS apps, why they happen, and how to prevent them.
+
+---
+
+## 1. **EXC_BAD_ACCESS (SIGSEGV / SIGBUS)**
+
+### **Meaning**
+
+The app tried to access memory that it shouldn’t access.
+
+### **Common Causes**
+
+* Accessing a deallocated object (dangling pointers)
+* Unsafe Swift/Objective-C bridging
+* Incorrect memory management in Objective-C (retain/release)
+* Using `unsafeMutablePointer` incorrectly
+* Concurrency issues → race conditions accessing shared memory
+
+### **Example**
+
+```swift
+weak var delegate: SomeDelegate?
+delegate!.call()   // delegate is nil → crash
+```
+
+
+---
+
+## 2. **Fatal Error / Force Unwrapping Crash**
+
+### **Meaning**
+
+A runtime exception caused by `fatalError`, `preconditionFailure`, or force unwrapping.
+
+### **Common Causes**
+
+* Force unwrapping a nil optional
+* Using `try!` on failing code
+* Using APIs incorrectly (wrong assumptions)
+* Invalid state in business logic
+
+### **Example**
+
+```swift
+let value: String? = nil
+print(value!)   // fatalError: unexpectedly found nil while unwrapping
+```
+
+
+---
+
+## 3. **Threading / Concurrency Crashes**
+
+### **Meaning**
+
+Errors caused by accessing shared data from multiple threads without synchronization.
+
+### **Common Causes**
+
+* Multiple threads modifying the same variable
+* Updating UI from a background thread
+* Using non-Sendable types in Swift concurrency
+* Performing CoreData operations from the wrong queue
+
+### **Example**
+
+```swift
+DispatchQueue.global().async {
+    self.label.text = "Hello"   // UI update on background thread → crash
+}
+```
+
+
+---
+
+## 4. **Out-of-Bounds / Index Crashes**
+
+### **Meaning**
+
+Trying to access an array element outside its range.
+
+### **Common Causes**
+
+* Wrong index calculation
+* Empty arrays
+* Race conditions causing inconsistent data
+
+### **Example**
+
+```swift
+let arr = []
+print(arr[0])  // Crash: Index out of range
+```
+
+
+---
+
+## 5. **Unrecognized Selector Sent to Instance**
+
+### **Meaning**
+
+Objective-C method is called but doesn't exist.
+
+### **Common Causes**
+
+* Wrong selector in `#selector`
+* Using dynamic Obj-C APIs incorrectly
+* KVO observing removed or wrong objects
+* Swizzling mistakes
+
+### **Example**
+
+```swift
+perform(Selector("nonExistingMethod"))  // Crash
+```
+
+
+---
+
+## 6. **KVO Crashes**
+
+### **Meaning**
+
+Key-Value Observing was misused.
+
+### **Common Causes**
+
+* Adding observer twice
+* Removing observer more than once
+* Deallocating observed object prematurely
+
+---
+
+## 7. **Core Data Crashes**
+
+### **Meaning**
+
+Core Data context or model inconsistencies.
+
+### **Common Causes**
+
+* Using NSManagedObjects across threads without proper context
+* Missing required attributes
+* Model version mismatch (lightweight migration failures)
+* Deadlocks from nested contexts
+
+### **Example**
+
+Using a `managedObject` created on one thread in another thread.
+
+---
+
+## 8. **SwiftUI Runtime Crashes**
+
+### **Meaning**
+
+Invalid updates or view lifecycle misuse.
+
+### **Common Causes**
+
+* Mutating view state during view update
+* Using `@State` or `@ObservedObject` wrongly
+* Updating UI inside body
+
+### **Example**
+
+```swift
+var body: some View {
+    self.text = "Test" // Mutating state during update → crash
+    Text("Hi")
+}
+```
+
+
+---
+
+## 9. **Memory Pressure / Out of Memory (OOM)**
+
+### **Meaning**
+
+App uses too much memory → the OS kills it.
+
+### **Common Causes**
+
+* Loading huge images into memory
+* Large data structures stored in RAM
+* Retain cycles → memory leaks
+* Infinite loops generating objects
+
+### **How to detect**
+
+* Instruments → Memory Graph
+* Xcode → Memory Gauge
+
+---
+
+## 10. **Infinite Recursion / Stack Overflow**
+
+### **Meaning**
+
+Method repeatedly calls itself with no exit condition.
+
+### **Common Causes**
+
+* Incorrect recursive logic
+* SwiftUI view computing body infinitely
+* Property observers calling themselves
+
+---
+
+## 11. **Network Crashes**
+
+(Not common but possible)
+
+### **Common Causes**
+
+* Parsing unexpected JSON → nil values
+* Force unwrapping JSON keys
+* Invalid casting
+
+### **Example**
+
+```swift
+let dict = try JSONDecoder().decode(User.self, from: data)
+```
+
+
+If the model doesn't match the response → crash.
+
+---
+
+## 12. **App Transport Security (ATS) Crashes**
+
+### **Meaning**
+
+Blocked insecure network calls.
+
+### **Common Causes**
+
+* Making HTTP request without adding ATS exceptions
+
+---
+
+## 13. **Main Thread Checker Violations**
+
+Not always a crash, but can cause runtime instability.
+
+### **Common Causes**
+
+* Doing heavy processing on main thread
+* Blocking UI thread
+
+---
+
+## 14. **XIB / Storyboard Crashes**
+
+### **Meaning**
+
+Storyboard misconfiguration.
+
+### **Common Causes**
+
+* Missing IBOutlet connections
+* Wrong class assigned in Interface Builder
+* Missing modules when using frameworks
+
+---
+
+## 15. **App Sandbox & File System Crashes**
+
+### **Meaning**
+
+Trying to access files outside allowed directories.
+
+### **Common Causes**
+
+* Writing to restricted paths
+* Missing file permissions
+* Using removed file URLs
+
+---
+
+## 16. **Push Notification Crashes**
+
+### **Common Causes**
+
+* Invalid payload structure from server
+* Accessing aps dictionary incorrectly
+
+---
+
+## 17. **Background Task Timeout Crashes**
+
+### **Meaning**
+
+System terminates app if background task exceeds time limit.
+
+---
+
+# Summary
+
+These are the most common crash types in iOS: memory access issues, optional unwrapping, threading, Core Data misuse, Storyboard mistakes, SwiftUI state mismanagement, and OOM terminations. Understanding why they happen helps in building stable, crash-free apps.
+
+If you want, I can add:
+
+* Crash logs interpretation
+* How to read .crash files
+* How to symbolicate crashes
+* Real examples from production apps

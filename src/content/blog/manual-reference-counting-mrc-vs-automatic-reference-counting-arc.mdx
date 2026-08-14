@@ -1,0 +1,236 @@
+---
+title: "MRC vs ARC: Manual vs Automatic Reference Counting"
+description: "Memory management is responsible for controlling the lifetime of objects in an application."
+pubDate: 2026-08-14
+tags: ["Memory Management","Objective-C"]
+emoji: "🧠"
+---
+
+Memory management is responsible for controlling the lifetime of objects in an application.
+
+Both **Manual Reference Counting (MRC)** and **Automatic Reference Counting (ARC)** are techniques used in Objective-C to manage object memory. Swift, however, always uses **ARC**.
+
+The primary difference is **who is responsible for retaining and releasing objects**.
+
+- **MRC** → The developer manually manages memory.
+- **ARC** → The compiler automatically manages memory.
+
+---
+
+# Manual Reference Counting (MRC)
+
+Under **Manual Reference Counting**, developers are responsible for explicitly increasing and decreasing an object's reference count.
+
+### Example
+
+```objective-c
+MyObject *obj = [[MyObject alloc] init];
+
+[obj retain];
+
+// Use the object
+
+[obj release];
+[obj release];
+```
+
+
+### Common Problems
+
+If you forget to release an object:
+
+- ❌ Memory Leak
+
+If you release an object too many times:
+
+- ❌ Over-release
+- ❌ Dangling Pointer
+- ❌ Application Crash (`EXC_BAD_ACCESS`)
+
+Because memory management was entirely manual, MRC was error-prone and required careful attention.
+
+---
+
+# Automatic Reference Counting (ARC)
+
+With **ARC**, developers no longer call `retain`, `release`, or `autorelease`.
+
+Instead, the **compiler automatically inserts the appropriate memory management calls at compile time**.
+
+### Swift Example
+
+```swift
+class Person {
+    let name: String
+
+    init(name: String) {
+        self.name = name
+    }
+}
+```
+
+
+### Objective-C Example
+
+```objective-c
+MyObject *obj = [[MyObject alloc] init];
+```
+
+
+Notice that there are **no manual memory management calls**.
+
+You should never call:
+
+- `retain`
+- `release`
+- `autorelease`
+
+ARC handles them automatically.
+
+---
+
+# How ARC Works
+
+ARC tracks the number of **strong references** pointing to an object.
+
+### Example
+
+```swift
+class Person {}
+
+var p1: Person? = Person()
+```
+
+
+Reference Count = **1**
+
+```swift
+var p2 = p1
+```
+
+
+Reference Count = **2**
+
+```swift
+p1 = nil
+```
+
+
+Reference Count = **1**
+
+```swift
+p2 = nil
+```
+
+
+Reference Count = **0**
+
+At this point, the object is immediately deallocated because nothing references it anymore.
+
+---
+
+# Advantages of ARC
+
+- ✅ Reduces boilerplate code
+- ✅ Eliminates most manual memory management bugs
+- ✅ Improves code readability
+- ✅ Lets developers focus on application logic
+- ✅ Automatically inserts `retain` and `release` calls where needed
+
+---
+
+# Does ARC Solve Every Memory Problem?
+
+**No.**
+
+ARC cannot automatically resolve **strong reference cycles (retain cycles)**.
+
+---
+
+## Example of a Retain Cycle
+
+```swift
+class Person {
+    var apartment: Apartment?
+}
+
+class Apartment {
+    var tenant: Person?
+}
+```
+
+
+If both properties are **strong references**:
+
+```swift
+person.apartment = apartment
+apartment.tenant = person
+```
+
+
+The reference graph becomes:
+
+```text
+Person
+   │
+   ▼
+Apartment
+   ▲
+   │
+Person
+```
+
+
+Each object keeps the other alive.
+
+As a result:
+
+- Reference count never reaches **0**
+- Neither object is deallocated
+- Memory leak occurs
+
+---
+
+# Breaking the Retain Cycle
+
+Use a **weak** or **unowned** reference when appropriate.
+
+### Weak Reference
+
+```swift
+class Apartment {
+    weak var tenant: Person?
+}
+```
+
+
+A weak reference **does not increase the reference count**, allowing ARC to deallocate the object when there are no remaining strong references.
+
+Use:
+
+- `weak` → When the reference can become `nil`
+- `unowned` → When the reference should never become `nil`
+
+---
+
+# MRC vs ARC
+
+| Feature | MRC | ARC |
+|---------|-----|-----|
+| Memory Management | Manual | Automatic |
+| `retain` / `release` | Required | Not Allowed |
+| Boilerplate | High | Low |
+| Memory Leaks | Common | Reduced (retain cycles are still possible) |
+| Over-release Crashes | Possible | Prevented |
+| Runtime Performance | Similar | Compiler optimizes retain/release insertion |
+| Swift Support | ❌ No | ✅ Yes (Swift always uses ARC) |
+
+---
+
+# Key Takeaways
+
+- **MRC** requires developers to manually manage object lifetimes using `retain`, `release`, and `autorelease`.
+- **ARC** automatically inserts memory management calls at compile time.
+- ARC significantly reduces memory management bugs and boilerplate.
+- ARC **does not eliminate retain cycles**—developers must still use `weak` or `unowned` references appropriately.
+- Swift exclusively uses **Automatic Reference Counting (ARC)** for memory management.

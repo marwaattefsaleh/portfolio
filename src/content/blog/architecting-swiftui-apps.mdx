@@ -1,64 +1,50 @@
 ---
-title: "Architecting SwiftUI Apps That Survive Your First Year"
-description: "Scaling SwiftUI beyond a prototype means drawing boundaries early. Here's how I structure views, models, and state so the app grows without the pain."
-pubDate: 2026-08-01
-updatedDate: 2026-08-10
-tags: ["SwiftUI", "Architecture", "MVVM"]
-emoji: 🏗️
+title: "Architecting SwiftUI Apps for Scale"
+description: "A practical look at how to keep large SwiftUI codebases maintainable — separation of concerns, feature folders, and a clear data flow."
+pubDate: 2026-08-13
+tags: ["swift", "swiftui", "architecture"]
+emoji: "🏗️"
 ---
 
-SwiftUI makes the first demo feel magical. The scary part is month nine, when that magic starts to cost you time. Most growing pains in SwiftUI come from the same place: views that know too much.
+Building a SwiftUI app is fun at first. Models are lightweight, views are declarative, and previews make iteration fast. But as the app grows past a few screens, the codebase starts to fight back. That's when a deliberate architecture pays off.
 
-In this post I want to share the small rules I've been applying at Enozom that keep large SwiftUI codebases boring, predictable, and fun to change.
+## Keep Views Dumb
 
-## Draw the boundaries early
-
-The single biggest win is deciding *before writing any code* what your layers are. I reach for a simple shape:
-
-- **View layer** — renders state, forwards user intent.
-- **Model layer** — plain value types with no SwiftUI imports.
-- **Service layer** — networking, persistence, push.
-- **View model / state container** — bridges the two.
-
-The rule that matters more than any diagram: **models must not import SwiftUI.** Once a struct depends on `@Published` or `@State`, it stops being a plain model and starts coupling your business logic to the UI framework.
-
-> A model you can test without a simulator is a model that will outlive your enthusiasm for a rewrite.
-
-## Keep state close to where it's rendered
-
-`@State` is perfect for ephemeral UI state — a search field, an open sheet. The moment two views need the same state, that's your signal to lift it or introduce a shared store.
-
-I use `@Observable` (iOS 17+) for shared app state and keep the store as dumb as possible: expose the data, expose small, well-named mutations, and let views decide how to present it.
-
-## A tiny example
-
-Here's the shape I tend to start with for a screen:
+A view should render state and forward user intent — nothing more. If you find yourself writing network calls or decoding JSON inside a view body, stop. Extract that logic into an observable model or a dedicated service.
 
 ```swift
-@MainActor
-@Observable
-final class OrdersViewModel {
-    private(set) var orders: [Order] = []
-    var isLoading = false
+struct ContentView: View {
+    @StateObject var model = ContentModel()
 
-    func load() async {
-        isLoading = true
-        defer { isLoading = false }
-        orders = await orderService.fetchOrders()
+    var body: some View {
+        List(model.items) { item in
+            ItemRow(item: item)
+        }
+        .task { await model.load() }
     }
 }
 ```
 
-The view holds the store, reads it, and forwards actions. Nothing clever. That's the point — clever code is hard to hand over to someone else in six months.
+The view owns almost nothing except presentation. Testing the view becomes trivial, and the model is easy to unit test in isolation.
 
-## What I stop worrying about
+## Group Code by Feature
 
-Once the boundaries are in place, a few things stop being scary:
+Flat folders of `Models/`, `Views/`, and `Services/` work for small apps but scale poorly. Once a feature touches all three, navigation and review get harder. Instead, group everything that belongs to one feature together:
 
-1. **Refactoring a screen** — views are small and swappable.
-2. **Testing** — services get mocked, stores get unit-tested in isolation.
-3. **Onboarding a junior dev** — new people can find where things live by following the layer names.
+```
+Features/
+  Profile/
+    ProfileView.swift
+    ProfileModel.swift
+    ProfileAPI.swift
+```
 
-Architecture isn't about being fancy. It's about being kind to your future self — and to whoever maintains your app after you.
+Dependencies between features should be explicit and small. When one feature imports another, it should feel like a deliberate decision, not an accident.
 
-Happy building ✨
+## Make State Changes Predictable
+
+Whether you choose MVVM, Redux, or something in between, the important thing is a single, obvious path for state changes. Prefer a few well-named methods on a model over ad-hoc mutation from multiple views. It makes bugs reproducible and fixes reviewable.
+
+## Start Simple
+
+Architecture is a tool, not a trophy. Start with plain `@StateObject` and feature folders. Introduce heavier patterns only when the pain justifies them — the team will thank you.

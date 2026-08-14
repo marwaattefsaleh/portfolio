@@ -1,0 +1,624 @@
+---
+title: "Value Types in Swift"
+description: "This page explains how Swift’s value types (struct, enum, Array, Dictionary, Set, etc.) differ from reference types, including mutability, memory m…"
+pubDate: 2026-08-14
+tags: ["Swift","Value Types"]
+emoji: "📦"
+---
+
+Welcome to the iOS Knowledge Base Wiki!
+This page explains how Swift’s value types (struct, enum, Array, Dictionary, Set, etc.) differ from reference types, including mutability, memory management, and real-world implications.
+
+---
+
+## What is a Struct?
+
+* A **struct** is a **value type** in Swift.
+* When assigned to a variable or passed to a function, the **entire value is copied**.
+* Commonly used for **data models** where immutability and safety are desired.
+* Declared with the `struct` keyword.
+
+**Example**
+
+```swift
+struct Point {
+    var x: Int
+    var y: Int
+}
+
+var p1 = Point(x: 0, y: 0)
+var p2 = p1   // Copy
+p2.x = 10
+print(p1.x) // 0 → unaffected
+```
+
+
+### How to Mutate Struct in Swift?
+Why Structs Behave Differently
+
+In Swift, structs are value types.
+* When you assign a struct to a new variable or pass it to a function, a copy is created.
+* By default, methods in a struct are non-mutating — they can’t change the struct’s stored properties.
+* This enforces immutability and helps avoid unintended side effects.
+To allow a struct to change itself, Swift requires the mutating keyword.
+
+> **Mutating Methods**
+
+A mutating method is a method that can change a struct’s properties.
+
+```
+struct Counter {
+    var value = 0
+    
+    mutating func increment() {
+        value += 1
+    }
+}
+
+var counter = Counter()
+counter.increment()
+print(counter.value) // 1
+```
+
+
+👉 If mutating was removed, the compiler would throw:
+
+**“Cannot assign to property: ‘self’ is immutable.”**
+
+> **Mutability and var vs let
+**
+
+var instance → properties can be changed.
+let instance → completely immutable (you cannot mutate, even with mutating methods).
+
+```
+struct Point {
+    var x: Int
+}
+
+var p1 = Point(x: 0)
+p1.x = 10 // ✅ Works
+
+let p2 = Point(x: 0)
+p2.x = 10 // ❌ Error: Cannot assign to property: 'p2' is a 'let' constant
+```
+
+
+> Reassigning self Inside Mutating Methods
+
+With mutating, you can even replace the entire instance:
+
+```
+struct ToggleSwitch {
+    var isOn = false
+    
+    mutating func toggle() {
+        self = ToggleSwitch(isOn: !isOn)
+    }
+}
+
+var button = ToggleSwitch()
+button.toggle()
+print(button.isOn) // true
+```
+
+
+This is powerful because it lets you treat a struct more like a state machine.
+
+> Why mutating Exists (but not in Classes)
+
+* Structs & enums are value types → stored on the stack (typically).
+
+* Swift enforces immutability unless you explicitly allow mutation with mutating.
+
+* Classes are reference types → stored on the heap, passed by reference.
+
+ Changing a property in a class doesn’t change the reference itself, so mutating isn’t needed.
+
+> Mutating Enums
+
+Enums can also mutate themselves with mutating.
+
+```
+enum Direction {
+    case north, south, east, west
+    
+    mutating func turnRight() {
+        switch self {
+        case .north: self = .east
+        case .east:  self = .south
+        case .south: self = .west
+        case .west:  self = .north
+        }
+    }
+}
+
+var dir = Direction.north
+dir.turnRight()
+print(dir) // east
+```
+
+
+> POP Connection (Protocol-Oriented Programming)
+
+In Swift, protocols can declare mutating methods to allow structs and enums to implement them.
+
+```
+protocol Resettable {
+    mutating func reset()
+}
+
+struct Timer: Resettable {
+    var seconds: Int = 0
+    
+    mutating func reset() {
+        seconds = 0
+    }
+}
+```
+
+
+Without mutating, a struct conforming to Resettable couldn’t change its properties.
+
+This makes value types powerful in Swift and central to Protocol-Oriented Programming (POP).
+
+---
+## Copy-on-Write (COW) in Swift
+Copy-on-Write (COW) is an optimization technique used in Swift to make value types efficient, especially for large collections like Array, Dictionary, and Set.
+
+Instead of immediately copying memory when assigning a value type, Swift delays the copy until the data is actually modified.
+This preserves value semantics (safety) while avoiding unnecessary performance cost
+> How COW Works
+1. When you assign a value type (like an Array) to another variable, both share the same underlying storage in memory.
+1. As long as neither variable changes, no actual copy happens (they just point to the same buffer).
+1. When one of them is modified, Swift creates a new copy of the data for that variable.
+
+👉 This ensures that the original value remains unchanged (value semantics) while being memory efficient.
+Example
+
+```
+var array1 = [1, 2, 3]
+var array2 = array1   // No copy yet, both share storage
+
+print(Unmanaged.passUnretained(array1 as AnyObject))  
+print(Unmanaged.passUnretained(array2 as AnyObject))  
+
+array2.append(4)      // Copy happens here → "Write"
+print(array1)         // [1, 2, 3]
+print(array2)         // [1, 2, 3, 4]
+```
+
+
+📌 Before append(4):
+array1 and array2 share memory.
+
+📌 After append(4):
+Swift copies the buffer, so array2 gets its own storage.
+
+> Why Is COW Important?
+
+* **Performance**:
+Avoids deep copies when passing arrays or dictionaries around.
+Copy happens only when needed.
+
+* **Safety**:
+Preserves value semantics → modifications in one variable never leak into another.
+
+**Real-World Example**
+
+Imagine you’re working with image data in an array:
+
+```
+var imageData1 = Array(repeating: 0, count: 1_000_000)  
+var imageData2 = imageData1  // No copy yet → cheap
+
+// At this point, only one memory buffer is used!
+imageData2[0] = 255          // Now copy happens
+```
+
+
+👉 This prevents unnecessary 1 MB deep copies until absolutely required.
+
+> COW and Structs
+
+Custom structs don’t automatically get COW.
+
+COW is implemented at the standard library level for collections (Array, Dictionary, Set, String).
+
+If you want COW in your own type, you can implement it manually using isKnownUniquelyReferenced.
+
+> Manual COW Implementation (Advanced)
+
+```
+final class Buffer {
+    var storage: [Int]
+    init(_ storage: [Int]) {
+        self.storage = storage
+    }
+}
+
+struct MyArray {
+    private var buffer: Buffer
+    
+    init(_ elements: [Int]) {
+        self.buffer = Buffer(elements)
+    }
+    
+    var elements: [Int] {
+        buffer.storage
+    }
+    
+    // Copy on write
+    private mutating func ensureUnique() {
+        if !isKnownUniquelyReferenced(&buffer) {
+            buffer = Buffer(buffer.storage)
+        }
+    }
+    
+    mutating func append(_ value: Int) {
+        ensureUnique()
+        buffer.storage.append(value)
+    }
+}
+
+var a = MyArray([1, 2, 3])
+var b = a   // Shared buffer
+b.append(4) // Copy happens here
+print(a.elements) // [1, 2, 3]
+print(b.elements) // [1, 2, 3, 4]
+```
+
+
+---
+### Arrays in swift
+> Why Arrays Are Not Reference Types in Swift
+1. **Declared as Structs**
+
+In Swift, Array is a generic struct (struct Array), not a class.
+
+That means Array follows value semantics.
+
+```
+let numbers = [1, 2, 3]
+print(type(of: numbers)) // Array<Int> → Struct
+```
+
+
+2. **Value Semantics by Design**
+* If you assign an array to another variable, you expect the original to remain unchanged when modifying the new one.
+* This behavior is consistent with Swift’s goal: safety and predictability.
+
+```
+var a = [1, 2, 3]
+var b = a     // Copy (value semantics)
+b.append(4)
+print(a) // [1, 2, 3]
+print(b) // [1, 2, 3, 4]
+```
+
+
+3. Copy-on-Write Makes Them Efficient
+* Instead of copying the entire array every time you assign, Swift uses COW.
+
+* Under the hood, two arrays may share the same storage buffer until one changes.
+
+* That’s why they sometimes feel like reference types (shared memory), but semantically they’re still value types.
+
+4. Different from Objective-C
+* In Objective-C, NSArray is a reference type (class).
+* Swift chose to make Array a value type (struct) for predictability and thread safety.
+
+> what would happen if Swift arrays were reference types instead of value types.
+If Arrays Were Reference Types
+
+1. Assignments Would Share Storage Always
+
+```
+var a = [1, 2, 3]
+var b = a     // Reference copy
+b.append(4)
+
+print(a) // [1, 2, 3, 4] ❌ (changed too!)
+print(b) // [1, 2, 3, 4]
+```
+
+
+* Both a and b would point to the same memory.
+
+* No separation between “original” and “copy.”
+
+2. Unintended Side Effects
+ Functions modifying arrays would unexpectedly mutate the caller’s array:
+
+```
+func addItem(_ arr: inout [Int]) {
+    arr.append(99)
+}
+
+var nums = [1, 2, 3]
+var copy = nums
+addItem(&copy)
+
+print(nums) // would also contain 99 if reference type ❌
+```
+
+
+3. No Need for Copy-on-Write (COW)
+ * Memory efficiency optimization (COW) wouldn’t exist.
+ * Every assignment would just share references, no deferred copy.
+
+4. Thread-Safety Issues
+ * Multiple threads could mutate the same array → data races.
+ * Swift avoids this by using value semantics + COW.
+
+5. Behavior Like Objective-C NSMutableArray
+ That’s exactly how arrays behave in Objective-C.
+
+Example:
+
+```
+NSMutableArray *a = [@[@1, @2, @3] mutableCopy];
+NSMutableArray *b = a; 
+[b addObject:@4];
+
+NSLog(@"%@", a); // (1,2,3,4) → mutated too
+```
+
+
+---
+## Where Value Types Live (Stack vs Heap)
+Small, fixed-size structs/enums (e.g., Int, Bool, Point(x: Int, y: Int)) → allocated on the stack.
+
+Stack is fast, automatically cleaned up when scope ends.
+
+```
+struct Point { var x: Int; var y: Int }
+var p1 = Point(x: 1, y: 2) // stored on stack
+```
+
+
+Large or dynamic value types (Array, Dictionary, String) → metadata is on the stack, but actual elements (buffer) live in the heap.
+
+This avoids huge copies and allows optimizations like Copy-on-Write (COW).
+
+```
+var arr = [1, 2, 3]  
+// stack: pointer + count + capacity
+// heap: elements [1, 2, 3]
+```
+
+
+## Thread Safety Benefit
+* Since value types are independent copies,
+* No two threads can accidentally mutate the same instance (unlike classes).
+* This makes concurrent programming in Swift safer.
+---
+### Strings in Swift
+* Strings in Swift are also value types (implemented as a struct).
+* Backed by Copy-on-Write (COW), so they behave efficiently like arrays.
+* Even though they are value types, Swift optimizes them to avoid unnecessary copies.
+
+**Example**
+
+```
+var s1 = "Hello"
+var s2 = s1   // Copy-on-Write reference until modified
+
+s2.append(" World")
+print(s1) // "Hello"
+print(s2) // "Hello World"
+```
+
+
+At the start, s1 and s2 share the same storage.
+
+When s2 is mutated, Swift creates a new copy, leaving s1 unaffected.
+
+> Why Strings are Value Types?
+* **Safety**: Immutable-like behavior ensures no unintended side effects when passing strings around.
+* **Performance**: Swift uses optimizations like small string optimization (SSO), where short strings are stored inline instead of heap allocation.
+* **Predictability**: Works consistently with Swift’s design that favors value semantics.
+
+> Mutability of Strings
+
+```
+var name = "Swift"
+name += " Language" // mutation allowed with var
+print(name) // "Swift Language"
+
+let fixed = "Immutable"
+fixed.append(" Test") // ❌ Error: Cannot use mutating member on immutable value
+```
+
+
+### What is SSO (Small String Optimisation)
+* Many modern languages (Swift, C++, Rust) use SSO.
+* SSO means that small strings are stored directly inside the struct’s memory (stack), without allocating on the heap.
+* This avoids the overhead of heap allocation for very short strings (like "Hi", "Ok", "Yes").
+* Typically, Swift can store up to 15 UTF-8 characters inline (implementation detail, may vary).
+* Once the string is longer than the inline capacity, it will be allocated on the heap.
+
+```
+var a = "Hello"       // stored inline (no heap allocation)
+var b = "This is a much longer string"  // stored on the heap
+```
+
+
+> Benefits of SSO
+* Faster creation of short strings.
+* No ARC overhead for short strings (because no heap object is created).
+* Reduces memory fragmentation.
+* Improves performance in string-heavy applications.
+
+## When to Use Structs in Real-World Applications
+Structs are value types, so they are best suited when you want safety, immutability, and predictable ownership.
+
+**Suitable Scenarios**
+
+ * **Data Models (Networking / API Responses)**
+
+    Often used to decode JSON payloads.
+
+    Codable works naturally with structs.
+
+`````
+  struct Movie: Codable, Identifiable {
+    let id: Int
+    let title: String
+    let releaseDate: String
+  }
+```
+
+
+Each API response is independent → copying is safe and desired.
+
+* **UI Models (SwiftUI)**
+
+SwiftUI is designed around structs.
+
+Views are structs → lightweight and immutable, diffed efficiently by the framework.
+
+```
+struct MovieRow: View {
+    let movie: Movie
+    
+    var body: some View {
+        Text(movie.title)
+    }
+}
+```
+
+
+* **Thread Safety**
+
+Since structs are copied, you avoid shared mutable state.
+
+Useful when passing models across async tasks or actors.
+
+* **Configuration & Settings**
+
+Represent app settings, options, or request payloads.
+
+```
+struct RequestConfig {
+    let baseURL: String
+    let timeout: Double
+}
+```
+
+
+* **Lightweight Game / Graphics Data**
+
+Points, colors, vectors → cheap to copy and used in high-performance rendering.
+
+```
+struct Vector2D {
+    var x: Double
+    var y: Double
+}
+```
+
+
+> Decision Flow
+1. Do you need shared mutable state?
+   * Yes → Class
+   * No → Continue
+
+2. Is the type primarily data that you pass around and copy safely?
+   * Yes → Struct
+
+3. Does it represent a view in SwiftUI?
+   * Yes → Struct
+
+4. Do you need inheritance or Objective-C runtime support?
+   * Yes → Class
+
+> ✅ Use Structs When
+* You’re modeling data (API responses, DTOs, configuration).
+* Immutability is preferred — changes create new copies.
+* You want thread safety by avoiding shared mutable state.
+* You’re building SwiftUI Views (all View conformers are structs).
+* You need lightweight, short-lived models like points, colors, vectors.
+
+```
+struct User: Codable, Identifiable {
+    let id: Int
+    let name: String
+    let email: String
+}
+```
+
+
+> ✅ Use Classes When
+* You need shared mutable state between multiple owners.
+* Object identity matters (two references to the same object).
+* You’re building ViewModels (ObservableObject in MVVM).
+* You’re managing long-lived services (e.g., NetworkManager, DatabaseManager).
+
+```
+class UserViewModel: ObservableObject {
+    @Published var users: [User] = []
+    
+    func loadUsers() {
+        // fetch data and update
+    }
+}
+```
+
+
+> Rule of Thumb
+* **Structs** = Data, SwiftUI Views, thread safety.
+* **Classes** = State management, identity, shared services.
+
+## Should a Singleton Be a struct or class?
+✅ Class is Preferred for Singletons
+* Reason 1: Identity matters
+  * A singleton should guarantee that all parts of the app share the same instance.
+
+  * Classes have reference semantics, so you can enforce that there is only one instance (static let shared).
+
+* Reason 2: Avoid unnecessary copies
+  * If the singleton were a struct, every time you assign it or pass it around you’d make a copy.
+
+  * That defeats the purpose of a singleton (shared state).
+
+* Reason 3: Lifecycle control
+  * Services like DatabaseManager or NetworkManager need to maintain connections or caches.
+  * A struct cannot model lifecycle and shared mutable state proper
+
+> ❌ What Happens if Singleton Is a struct? (Backwards case)
+
+```
+struct Logger {
+    static var shared = Logger()
+    
+    var logs: [String] = []
+    
+    mutating func add(_ message: String) {
+        logs.append(message)
+    }
+}
+
+var l1 = Logger.shared
+var l2 = Logger.shared
+
+l1.add("Hello")
+print(l2.logs) // [] → NOT shared, since it's a copy
+```
+
+
+* Each access to Logger.shared gives you a copy, unless you carefully manage mutating static vars (which is messy).
+* State won’t actually be shared across the app.
+
+**Singletons should always be classes in Swift.**
+
+Use struct singletons only for stateless utilities (pure functions, constants), e.g.:
+
+```
+struct MathUtils {
+    static func square(_ n: Int) -> Int { n * n }
+}
+```
+
+
+Here, there’s no state to share, so a struct is fine.

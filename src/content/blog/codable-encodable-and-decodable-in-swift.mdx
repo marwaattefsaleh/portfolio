@@ -1,0 +1,837 @@
+---
+title: "Codable, Encodable, and Decodable in Swift"
+description: "Swift provides three closely related protocols for converting data between Swift types and external representations such as JSON, Plist, or binary…"
+pubDate: 2026-08-14
+tags: ["Swift","Codable","Networking"]
+emoji: "🧾"
+---
+
+## Overview
+
+Swift provides three closely related protocols for converting data between **Swift types** and **external representations** such as JSON, Plist, or binary formats:
+
+- `Encodable` → Convert Swift types **to** external data
+
+- `Decodable` → Convert external data **into** Swift types
+
+- `Codable` → Typealias for `Encodable & Decodable`
+
+```swift
+typealias Codable = Encodable & Decodable
+```
+
+
+These protocols are heavily used in **networking**, **persistence**, and **inter-process communication**.
+
+---
+
+## Why Codable Exists
+
+Before Swift 4, JSON parsing relied on:
+
+- Manual dictionary parsing
+
+- Objective-C bridging
+
+- Third-party libraries (e.g. SwiftyJSON)
+
+Problems:
+
+- Error-prone
+
+- Verbose
+
+- Weak type safety
+
+`Codable` solves this by:
+
+- Leveraging the compiler
+
+- Enforcing strong typing
+
+- Generating encoding/decoding logic automatically
+
+---
+
+## Encodable
+
+### Definition
+
+`Encodable` allows a type to be **encoded** into an external representation.
+
+```swift
+protocol Encodable {
+    func encode(to encoder: Encoder) throws
+}
+```
+
+
+### Example
+
+```swift
+struct User: Encodable {
+    let id: Int
+    let name: String
+}
+```
+
+
+Encoding to JSON:
+
+```swift
+let user = User(id: 1, name: "Ahmed")
+let data = try JSONEncoder().encode(user)
+```
+
+
+---
+
+## Decodable
+
+### Definition
+
+`Decodable` allows a type to be **initialized from external data**.
+
+```swift
+protocol Decodable {
+    init(from decoder: Decoder) throws
+}
+```
+
+
+### Example
+
+```swift
+struct User: Decodable {
+    let id: Int
+    let name: String
+}
+```
+
+
+Decoding from JSON:
+
+```swift
+let data = jsonData
+let user = try JSONDecoder().decode(User.self, from: data)
+```
+
+
+---
+
+## Codable
+
+### Definition
+
+```swift
+struct User: Codable {
+    let id: Int
+    let name: String
+}
+```
+
+
+- Compiler synthesizes both encoding and decoding
+
+- Works if **all properties** are Codable
+
+---
+
+## How Compiler Synthesis Works
+
+Swift automatically generates:
+
+- `CodingKeys` enum
+
+- `encode(to:)`
+
+- `init(from:)`
+
+**Only if**:
+
+- All stored properties conform to Codable
+
+- No custom implementation exists
+
+---
+
+## CodingKeys
+
+### Default Behavior
+
+Property names map directly to JSON keys.
+
+```json
+{
+  "id": 1,
+  "name": "Ahmed"
+}
+```
+
+
+### Custom Mapping
+
+```swift
+struct User: Codable{
+  let id: Int
+  let fullName: String
+
+   enum CodingKeys: String, CodingKey {
+        case id
+        case fullName ="full_name"
+    }
+}
+```
+
+
+---
+
+## Nested Models
+
+```json
+{
+  "id": 1,
+  "profile": {
+    "age": 30,
+    "city": "Cairo"
+  }
+}
+```
+
+
+```swift
+struct User: Codable {
+    let id: Int
+    let profile: Profile
+}
+
+struct Profile: Codable {
+    let age: Int
+    let city: String
+}
+```
+
+
+---
+
+## Optional Properties
+
+```swift
+struct User: Codable {
+    let id: Int
+    let nickname: String?
+}
+```
+
+
+- Missing keys → `nil`
+
+- No decoding error
+
+---
+
+## Custom Decoding Logic
+
+Use when:
+
+- Transforming values
+
+- Handling invalid data
+
+- Providing defaults
+
+```swift
+struct User: Decodable {
+    let id: Int
+    let isActive: Bool
+
+    enum CodingKeys: String, CodingKey {
+       case id
+       case isActive = "is_active"
+    }
+
+   init(from decoder: Decoder) throws {
+       let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(Int.self, forKey: .id)
+        isActive = (try? container.decode(Bool.self, forKey: .isActive)) ?? false
+    }
+}
+```
+
+
+---
+
+## Custom Encoding Logic
+
+```swift
+struct User: Encodable{
+    let id: Int
+    let password: String
+
+   enum CodingKeys: String, CodingKey {
+        case id
+    }
+
+  func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        // password intentionally excluded
+    }
+}
+```
+
+
+---
+
+## Keyed vs Unkeyed Containers
+
+### Keyed (Dictionary / JSON Object)
+
+```swift
+decoder.container(keyedBy: CodingKeys.self)
+```
+
+
+### Unkeyed (Array)
+
+```swift
+decoder.unkeyedContainer()
+```
+
+
+Used when decoding arrays of values.
+
+---
+
+## Decoding Strategies
+
+### Date Decoding
+
+```swift
+decoder.dateDecodingStrategy = .iso8601
+```
+
+
+### Key Decoding Strategy
+
+```swift
+decoder.keyDecodingStrategy = .convertFromSnakeCase
+```
+
+
+---
+
+## Error Handling
+
+Common decoding errors:
+
+- `keyNotFound`
+
+- `typeMismatch`
+
+- `valueNotFound`
+
+- `dataCorrupted`
+
+```swift
+do {
+    let user = try decoder.decode(User.self, from: data)
+} catch {
+    print(error)
+}
+```
+
+
+---
+
+## Codable and Inheritance
+
+### Classes
+
+- Must call `super.init(from:)`
+
+- More complex than structs
+
+```swift
+class Base: Codable {
+    let id: Int
+}
+
+class User: Base {
+    let name: String
+}
+```
+
+
+### Interview Tip
+
+👉 Prefer **structs** with Codable unless inheritance is required.
+
+---
+
+## Codable vs NSCoding
+
+Codable | NSCoding
+-- | --
+Swift-native | Objective-C based
+Type-safe | Less safe
+Compiler-generated | Manual
+Preferred | Legacy
+
+---
+
+## Performance Considerations
+
+- Codable is **fast enough for most apps**
+
+- Manual decoding may be faster in extreme cases
+
+- Avoid unnecessary `Array(x)` conversions
+
+- Reuse `JSONDecoder` when possible
+
+---
+
+## Common Interview Questions & Answers
+
+### Q1: Difference between Codable, Encodable, and Decodable?
+
+**Answer:**
+
+- Encodable → encode Swift → data
+
+- Decodable → decode data → Swift
+
+- Codable → both
+
+---
+
+### Q2: When does compiler fail to synthesize Codable?
+
+**Answer:**
+
+- Non-Codable property
+
+- Custom init exists
+
+- Custom encode/decode implemented
+
+---
+
+### Q3: How to handle missing JSON keys?
+
+**Answer:**
+
+- Use optional properties
+
+- Or provide default values in custom init
+
+---
+
+### Q4: How to ignore a property?
+
+**Answer:**
+
+- Exclude it from `CodingKeys`
+
+---
+
+### Q5: Codable with polymorphism?
+
+**Answer:**
+
+- Use enums with associated values
+
+- Or manual decoding with type discriminator
+
+---
+
+### Q6: Codable vs third-party libraries?
+
+**Answer:**
+
+- Codable preferred
+
+- Third-party only for edge cases
+
+---
+
+### Q7: Does Codable work with CoreData / Realm?
+
+**Answer:**
+
+- Yes, via mapping layer
+
+- Entities themselves usually not Codable
+
+---
+
+## Best Practices
+
+- Prefer `struct` + `Codable`
+
+- Use `convertFromSnakeCase` when possible
+
+- Handle decoding errors explicitly
+
+- Avoid force-try
+
+- Separate DTOs from domain models in clean architecture
+
+---
+
+## Summary
+
+`Codable` is:
+
+- One of the most important Swift features
+
+- Essential for networking and persistence
+
+- Frequently asked in iOS interviews
+
+- A strong indicator of Swift proficiency
+
+# Real Interview Coding Exercises – Codable
+### Exercise 1: Basic JSON Decoding
+Problem
+Decode the following JSON into a Swift model.
+
+```
+{
+  "id": 10,
+  "name": "Marwa",
+  "email": "marwa@example.com"
+}
+```
+
+
+Requirements
+- Use Codable
+- No custom decoding logic
+
+#### Solution
+
+```
+struct User: Codable {
+    let id: Int
+    let name: String
+    let email: String
+}
+```
+
+
+#### Interview Focus
+- Understanding of compiler synthesis
+- Proper data types
+
+### Exercise 2: Snake Case Conversion
+Problem
+
+Decode this JSON:
+
+```
+{
+  "user_id": 7,
+  "full_name": "Ahmed Ali"
+}
+```
+
+
+#### Solution – Using CodingKeys
+
+```
+struct User: Codable {
+    let userId: Int
+    let fullName: String
+
+    enum CodingKeys: String, CodingKey {
+        case userId = "user_id"
+        case fullName = "full_name"
+    }
+}
+```
+
+
+Alternative (Preferred in Real Projects)
+
+```
+decoder.keyDecodingStrategy = .convertFromSnakeCase
+```
+
+
+#### Interview Tip
+👉 Mention trade-off between explicit mapping vs global strategy
+
+### Exercise 3: Optional and Missing Keys
+Problem
+JSON may omit nickname.
+
+```
+{
+  "id": 1,
+  "name": "Omar"
+}
+```
+
+
+#### Solution
+
+```
+struct User: Codable {
+    let id: Int
+    let name: String
+    let nickname: String?
+}
+```
+
+
+#### Interview Focus
+- Missing keys → nil
+- No decoding failure
+
+### Exercise 4: Provide Default Values
+Problem
+If is_active is missing, default to false.
+
+```
+{
+  "id": 5
+}
+```
+
+
+#### Solution
+
+```
+struct User: Decodable {
+    let id: Int
+    let isActive: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case isActive = "is_active"
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(Int.self, forKey: .id)
+        isActive = (try? container.decode(Bool.self, forKey: .isActive)) ?? false
+    }
+}
+```
+
+
+#### Interview Focus
+- Defensive decoding
+- Avoid crashing on backend changes
+
+### Exercise 5: Nested JSON
+Problem
+
+```
+{
+  "id": 1,
+  "profile": {
+    "age": 28,
+    "country": "Egypt"
+  }
+}
+```
+
+
+### Solution
+
+```
+struct User: Codable {
+    let id: Int
+    let profile: Profile
+}
+
+struct Profile: Codable {
+    let age: Int
+    let country: String
+}
+```
+
+
+### Exercise 6: Decode Array of Objects
+Problem
+
+```
+[
+  { "id": 1, "name": "A" },
+  { "id": 2, "name": "B" }
+]
+```
+
+
+#### Solution
+
+```
+let users = try decoder.decode([User].self, from: data)
+```
+
+
+#### Interview Focus
+- Generic decoding
+- Root-level arrays
+
+### Exercise 7: Ignore Sensitive Fields
+Problem
+Do NOT encode password.
+#### Solution
+
+```
+struct User: Encodable {
+    let id: Int
+    let username: String
+    let password: String
+
+    enum CodingKeys: String, CodingKey {
+        case id, username
+    }
+}
+```
+
+
+#### Interview Focus
+- Security awareness
+- Custom encoding control
+
+### Exercise 8: Decode Multiple Date Formats
+Problem
+Backend returns inconsistent date formats.
+#### Solution
+
+```
+decoder.dateDecodingStrategy = .custom { decoder in
+    let container = try decoder.singleValueContainer()
+    let value = try container.decode(String.self)
+
+    let formats = [
+        "yyyy-MM-dd'T'HH:mm:ssZ",
+        "yyyy-MM-dd"
+    ]
+
+    for format in formats {
+        let formatter = DateFormatter()
+        formatter.dateFormat = format
+        if let date = formatter.date(from: value) {
+            return date
+        }
+    }
+
+    throw DecodingError.dataCorruptedError(
+        in: container,
+        debugDescription: "Invalid date format"
+    )
+}
+```
+
+
+#### Interview Focus
+- Real-world backend inconsistency
+- Custom decoding strategies
+
+### Exercise 9: Polymorphic JSON (Advanced)
+Problem
+
+```
+{
+  "type": "video",
+  "url": "example.com"
+}
+```
+
+
+or
+
+```
+{
+  "type": "image",
+  "width": 300,
+  "height": 200
+}
+```
+
+
+#### Solution (Enum + Associated Values)
+
+```
+enum Media: Decodable {
+    case video(Video)
+    case image(Image)
+
+    enum CodingKeys: String, CodingKey {
+        case type
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let type = try container.decode(String.self, forKey: .type)
+
+        switch type {
+        case "video":
+            self = .video(try Video(from: decoder))
+        case "image":
+            self = .image(try Image(from: decoder))
+        default:
+            throw DecodingError.dataCorruptedError(
+                forKey: .type,
+                in: container,
+                debugDescription: "Unknown type"
+            )
+        }
+    }
+}
+```
+
+
+#### Interview Focus
+- Type discrimination
+- Manual decoding control
+
+### Exercise 10: DTO vs Domain Model (Clean Architecture)
+Problem
+Keep API models separate from business logic.
+#### Solution
+
+```
+struct UserDTO: Codable {
+    let id: Int
+    let name: String
+}
+
+struct User {
+    let id: Int
+    let displayName: String
+}
+
+extension UserDTO {
+    func toDomain() -> User {
+        User(id: id, displayName: name.uppercased())
+    }
+}
+```
+
+
+#### Interview Focus
+- Clean Architecture
+- Separation of concerns
+
+### Q: Why might Codable fail at runtime?
+#### Answer:
+- Type mismatch
+- Unexpected null
+- Missing non-optional key
+
+### Q: When would you avoid Codable?
+#### Answer:
+- Extremely performance-critical paths
+- Highly dynamic schemas
+
+### Q: Codable vs Manual Parsing?
+#### Answer:
+- Codable preferred
+- Manual only for edge cases

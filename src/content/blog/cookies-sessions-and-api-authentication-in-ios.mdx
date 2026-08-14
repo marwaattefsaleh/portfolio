@@ -1,0 +1,139 @@
+---
+title: "Cookies, Sessions, and API Authentication in iOS"
+description: "This article explains the differences between cookies, sessions, and API authentication, and details common API authentication methods in iOS devel…"
+pubDate: 2026-08-14
+tags: ["Networking","API","Security"]
+emoji: "🍪"
+---
+
+This article explains the differences between cookies, sessions, and API authentication, and details common API authentication methods in iOS development. Understanding these mechanisms helps you secure mobile apps and communicate safely with APIs.
+
+# Cookies
+### Definition:
+A cookie is a small piece of data stored by the client (browser or webview) and sent automatically with HTTP requests to the same domain.
+
+### Key Points:
+  - Stored on the client.
+  - Can include flags like HttpOnly, Secure, and SameSite for security.
+  - Typically used for session IDs or user preferences.
+
+### iOS Usage:
+  - Cookies are automatically handled by WKWebView or URLSession.
+  - Custom management is possible using HTTPCookieStorage.
+
+### Pros:
+  - Automatic with HTTP requests.
+  - Supports expiration and security flags.
+### Cons:
+  - Vulnerable to CSRF attacks if not handled properly.
+  - Limited storage (~4KB per cookie).
+
+# Sessions
+### Definition:
+A session is server-side storage of user state. The server creates a session ID when a user logs in, which is sent to the client via a cookie.
+
+### How it works:
+  - User logs in → server creates a session.
+  - Server sends session ID to client (cookie).
+  - Browser or webview sends cookie automatically with requests.
+  - Server validates session ID → authenticates the user.
+
+### Characteristics:
+  - Stateful: server keeps track of the user.
+  - Common in traditional web apps.
+
+### iOS Usage:
+URLSession handles cookies automatically; session-based authentication works out of the box when consuming web APIs relying on cookies.
+
+### Pros:
+ - Sensitive data stays on the server.
+ - Easy to invalidate (logout).
+
+### Cons:
+ - Harder to scale across multiple servers without shared session storage.
+ - Browser-dependent.
+
+# API Authentication
+### Definition:
+API authentication is used for stateless, programmatic access to APIs. Typically done via tokens or other methods, depending on the security requirements.
+
+### Key Characteristics:
+ - Stateless: the server does not need to store session data.
+ - Works for mobile apps, SPAs, or server-to-server communication.
+ - Requires explicit sending of credentials or tokens with each request.
+
+## Token-Based Authentication (Bearer / JWT)
+### How it works:
+ - Client logs in → server returns a token.
+ - Client stores the token securely (Keychain in iOS).
+ - Client sends the token in HTTP headers: Authorization: Bearer
+ - Server validates the token → authenticates the request.
+
+### Pros:
+- Stateless → easy to scale.
+- JWT can include roles/claims for authorization.
+
+### Cons:
+- Token revocation is harder; valid until expiry.
+- Must store securely to prevent leaks (XSS).
+
+## API Keys
+### Definition:
+A unique string issued by the API provider to identify the client application.
+
+### How it works:
+- Sent in HTTP headers or query parameters:
+- Authorization: ApiKey
+
+### Pros:
+- Simple and widely supported.
+- Works well for server-to-server communication.
+
+### Cons:
+- Does not identify users—only the client app.
+- Must be kept secret; otherwise, anyone can use it.
+
+## Basic Authentication
+### Definition:
+Uses username and password, typically Base64 encoded, sent in HTTP headers.
+Authorization: Basic dXNlcm5hbWU6cGFzc3dvcmQ=
+
+### Pros:
+- Easy to implement.
+
+### Cons:
+- Credentials are sent with every request → must use HTTPS.
+- Not recommended for long-term authentication.
+
+## OAuth 2.0
+### Definition:
+A protocol for delegated authorization, allowing third-party apps to access APIs without exposing user credentials.
+
+### How it works:
+- User authorizes the app → app receives an authorization code.
+- App exchanges code for access token.
+- App calls API with access token.
+- Optional refresh token is used to get new access tokens.
+
+### Pros:
+- Industry standard, secure, and scalable.
+- Supports scopes (fine-grained permissions).
+
+### Cons:
+- Complex to implement.
+- Requires HTTPS and proper token handling.
+
+## HMAC(Hash-based Message Authentication Code) / Signature-Based Authentication
+### Definition:
+The client signs requests using a shared secret and a hashing algorithm. The server validates the signature to ensure authenticity.
+
+### Pros:
+- Protects against tampering and replay attacks.
+- Good for server-to-server APIs.
+
+### Cons:
+- Requires shared secret between client and server.
+- Slightly more complex than token-based auth.
+
+# Cookies/Sessions vs API Authentication
+![Screenshot 2025-11-12 at 11 21 43 PM](https://github.com/user-attachments/assets/92d6f26a-9a3c-4219-b3e5-d6a6fd3755c6)

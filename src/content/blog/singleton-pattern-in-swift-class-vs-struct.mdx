@@ -1,0 +1,121 @@
+---
+title: "Singleton Pattern in Swift: Class vs Struct"
+description: "A Singleton is a design pattern that ensures a type has only one instance and provides a global access point."
+pubDate: 2026-08-14
+tags: ["Design Patterns","Swift"]
+emoji: "♻️"
+---
+
+A Singleton is a design pattern that ensures a type has only one instance and provides a global access point.
+Widely used for shared resources like network managers, logging, database managers, or app configuration.
+In Swift, classes are most commonly used because of reference semantics, while structs can mimic singletons but have value semantics limitations.
+
+# Class Singleton
+- ✅ Features
+  - Reference type: Only one instance exists in memory.
+  - Shared mutable state: Any change affects all references.
+  - Thread-safe: static let ensures atomic, lazy initialization.
+    - **Breakdown**
+      - Thread-safe
+        - In Swift, “thread-safe” means multiple threads can access or initialize the object at the same time without causing race conditions or crashes.
+        - You don’t need to add locks or DispatchQueue manually when using static let
+        - Encapsulation: private init() prevents external creation of instances.
+      - static let
+        - static means this property belongs to the type itself, not an instance.
+        - let means it’s constant — once assigned, it can’t be changed.
+      - Lazy Initialization
+        - Swift guarantees that static let is initialized only once, the first time it’s accessed.
+        - If no code accesses NetworkManager.shared, it is not created.
+        - This is what “lazy” means — the object is created on first use, not at app launch.
+      - Atomic Initialization
+        - Swift ensures the initialization of static let is atomic.
+        - Even if two threads try to access NetworkManager.shared at the exact same time:
+        - Only one instance is created.
+        - No race condition occurs.
+        - Both threads get the same instance.
+
+- 📘 Example
+
+```
+class NetworkManager {
+    static let shared = NetworkManager() // Singleton instance
+    private init() {}
+
+    var apiToken: String?
+}
+
+var copy = NetworkManager.shared
+copy.apiToken = "123456"
+print(copy.apiToken)              // "123456"
+print(NetworkManager.shared.apiToken) // "123456"
+```
+
+
+- Explanation:
+copy points to the same object as NetworkManager.shared.
+Mutations via copy affect shared because classes are reference types.
+
+- ✅ Output:
+
+```
+123456
+123456
+```
+
+
+## ⚡ Advantages
+- True singleton with single shared instance.
+- Shared mutable state accessible globally.
+- Thread-safe with static let.
+- Can conform to protocols for testability.
+
+## ⚠️ Disadvantages
+- Harder to mock or test.
+- Can lead to hidden global dependencies.
+- Risk of overuse, creating tight coupling.
+
+# Struct “Singleton”
+- ⚠️ Features
+  - Value type: Assignment creates a copy, not a shared instance.
+  - Mutable state is not truly shared.
+  - Only safe for immutable or read-only configurations.
+
+- 📘 Example
+
+```
+struct AppSettings {
+    static var shared = AppSettings()
+    var theme: String = "Light"
+}
+
+var copy = AppSettings.shared
+copy.theme = "Dark"
+print(copy.theme)           // "Dark" (copy)
+print(AppSettings.shared.theme) // "Light" (original unchanged)
+```
+
+
+- Explanation:
+  - Assignment creates a new, independent copy.
+  - Mutating the copy does not affect the shared instance.
+  - Struct singletons are not true singletons if you mutate copies.
+
+- ⚡ Observations
+  - Static shared is singleton-like, but only if you always use the static instance.
+  - Structs are ideal for read-only configuration constants, e.g., app theme names, API URLs.
+  - Avoid using struct singletons for mutable shared state.
+
+# Class vs Struct — Side-by-Side
+![Screenshot 2025-11-12 at 1 09 35 PM](https://github.com/user-attachments/assets/923c5752-9faf-41e2-ad1e-f7ee46fa43ed)
+
+## Common Use Cases
+
+ - Class Singletons:
+   - Network managers: NetworkManager.shared
+   - Database managers: CoreDataStack.shared
+   - Logging/Analytics: Logger.shared
+   - User session management: UserSession.shared
+
+- Struct Singletons:
+  - App configuration: AppSettings.shared
+  - Immutable constants, e.g., API endpoints, default themes
