@@ -1,0 +1,103 @@
+---
+import '../styles/global.css';
+import { seo, site } from '../data/content';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title = seo.title, description = seo.description } = Astro.props;
+
+const ogUrl = 'https://marwa-attef.example.com/'; // TODO: replace with real URL
+const ogImage = '/og-image.svg'; // TODO: replace with a real PNG/JPG (SVG isn't supported everywhere)
+const favicon = '/favicon.svg';
+---
+
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- SEO -->
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="author" content={site.fullName} />
+    <link rel="canonical" href={ogUrl} />
+    <meta name="theme-color" content="#FFF8F1" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={ogUrl} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href={favicon} />
+
+    <!-- Fonts: Baloo 2 (display) + Inter (body) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!--
+      Apply the saved (or system) theme BEFORE first paint to avoid a flash of
+      the wrong colors. `is:inline` keeps this script un-bundled & synchronous.
+    -->
+    <script is:inline>
+      (function () {
+        var stored = null;
+        try {
+          stored = localStorage.getItem('theme');
+        } catch (e) {}
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var theme = stored || (prefersDark ? 'dark' : 'light');
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
+  </head>
+
+  <body class="relative overflow-x-clip">
+    <slot />
+
+    <!--
+      Scroll-reveal for static (non-React) sections: adds `.is-visible` to any
+      `.reveal` element when it enters the viewport. React islands use
+      framer-motion's `whileInView` instead.
+    -->
+    <script>
+      const revealEls = document.querySelectorAll('.reveal');
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      if (prefersReducedMotion || !('IntersectionObserver' in window)) {
+        revealEls.forEach((el) => el.classList.add('is-visible'));
+      } else {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('is-visible');
+                observer.unobserve(entry.target);
+              }
+            });
+          },
+          { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
+        );
+        revealEls.forEach((el) => observer.observe(el));
+      }
+    </script>
+  </body>
+</html>

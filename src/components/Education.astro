@@ -1,0 +1,45 @@
+---
+import SectionHeading from './SectionHeading.astro';
+import { education } from '../data/content';
+---
+
+<section id="education" class="relative py-20 sm:py-28">
+  <div class="mx-auto max-w-4xl px-5 sm:px-8">
+    <SectionHeading
+      emoji="🎓"
+      eyebrow="Education"
+      title="Where I studied"
+      subtitle="The foundation everything else is built on."
+    />
+
+    <div class="mt-14 grid gap-6 md:grid-cols-2">
+      {
+        education.map((item, i) => (
+          <article
+            class={`reveal group rounded-4xl border border-white/70 bg-white/70 p-7 shadow-soft backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lift dark:border-plum-800 dark:bg-plum-900/60 ${
+              i === 0 ? 'border-lavender-300/80 hover:border-lavender-400' : 'hover:border-blush-300'
+            }`}
+            style={`--reveal-delay: ${i * 120}ms`}
+          >
+            <div class="flex items-center justify-between">
+              <span
+                aria-hidden="true"
+                class="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-lavender-100 to-blush-100 text-2xl transition-transform duration-300 group-hover:-rotate-12 group-hover:scale-110 dark:from-plum-800 dark:to-plum-800"
+              >
+                🎓
+              </span>
+              <span class="rounded-full bg-sunny-100 px-3.5 py-1 text-sm font-bold text-[#A8790B] dark:bg-sunny-300/15 dark:text-sunny-200">
+                {item.year}
+              </span>
+            </div>
+            <h3 class="mt-5 font-display text-lg font-bold leading-snug text-plum dark:text-cream sm:text-xl">
+              {item.degree}
+            </h3>
+            <p class="mt-1.5 font-medium text-violet-600 dark:text-lavender-300">{item.school}</p>
+            <p class="mt-1 text-sm text-plum-muted dark:text-lavender-100/60">{item.location}</p>
+          </article>
+        ))
+      }
+    </div>
+  </div>
+</section>

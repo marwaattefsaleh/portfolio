@@ -1,0 +1,30 @@
+---
+interface Props {
+  emoji: string;
+  eyebrow?: string;
+  title: string;
+  subtitle?: string;
+}
+
+const { emoji, eyebrow, title, subtitle } = Astro.props;
+---
+
+<div class="reveal mx-auto max-w-2xl text-center">
+  <span
+    aria-hidden="true"
+    class="mb-4 inline-grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-blush-200 via-peach-200 to-sunny-200 text-2xl shadow-soft dark:from-plum-800 dark:via-plum-800 dark:to-blush-300/30"
+  >
+    {emoji}
+  </span>
+  {eyebrow && (
+    <p class="mb-2 text-sm font-bold uppercase tracking-[0.2em] text-coral-500 dark:text-coral-400">
+      {eyebrow}
+    </p>
+  )}
+  <h2 class="font-display text-3xl font-bold text-plum dark:text-cream sm:text-4xl">{title}</h2>
+  {subtitle && (
+    <p class="mt-3 text-base leading-relaxed text-plum-soft dark:text-lavender-100/75 sm:text-lg">
+      {subtitle}
+    </p>
+  )}
+</div>

@@ -1,0 +1,103 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------------------------------------------------------------------------
+   Base
+--------------------------------------------------------------------------- */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5.5rem; /* keep anchored sections clear of the sticky nav */
+}
+
+body {
+  @apply bg-cream text-plum-soft font-sans antialiased dark:bg-plum-950 dark:text-lavender-100;
+}
+
+::selection {
+  @apply bg-coral-500/30 text-plum dark:bg-coral-400/40 dark:text-cream;
+}
+
+/* Subtle custom scrollbar to match the theme */
+::-webkit-scrollbar {
+  width: 12px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-cream dark:bg-plum-900;
+}
+::-webkit-scrollbar-thumb {
+  @apply rounded-full bg-blush-300 dark:bg-plum-800;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-coral-400;
+}
+
+/* ---------------------------------------------------------------------------
+   Fonts — friendly rounded display + clean body
+   (Loaded via Google Fonts <link> in Layout.astro; CSS font stacks configured
+   in tailwind.config.mjs under fontFamily.display / fontFamily.sans)
+--------------------------------------------------------------------------- */
+
+/* ---------------------------------------------------------------------------
+   Scroll-reveal (vanilla IntersectionObserver, see Layout.astro script)
+   Elements with the `.reveal` class fade + slide in when scrolled into view.
+--------------------------------------------------------------------------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---------------------------------------------------------------------------
+   Organic blob shapes used behind the hero avatar & section decorations
+--------------------------------------------------------------------------- */
+.blob {
+  border-radius: 60% 40% 55% 45% / 50% 55% 45% 50%;
+}
+
+.blob-alt {
+  border-radius: 45% 55% 60% 40% / 55% 45% 55% 45%;
+}
+
+/* Decorative dotted grid background for some sections */
+.dot-grid {
+  background-image: radial-gradient(currentColor 1.5px, transparent 1.5px);
+  background-size: 22px 22px;
+}
+
+/* ---------------------------------------------------------------------------
+   Accessible focus rings
+--------------------------------------------------------------------------- */
+:where(a, button, input, textarea, [tabindex]):focus-visible {
+  @apply outline-2 outline-offset-2 outline-coral-500;
+}
+
+/* ---------------------------------------------------------------------------
+   Reduced motion — disable decorative animation & reveal transforms
+--------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

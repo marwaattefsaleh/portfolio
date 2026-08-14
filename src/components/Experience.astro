@@ -1,0 +1,82 @@
+---
+import SectionHeading from './SectionHeading.astro';
+import { experience } from '../data/content';
+---
+
+<section
+  id="experience"
+  class="relative overflow-hidden bg-gradient-to-b from-cream via-blush-50 to-cream py-20 dark:from-plum-950 dark:via-plum-900/40 dark:to-plum-950 sm:py-28"
+>
+  <!-- soft blob decoration -->
+  <div aria-hidden="true" class="blob absolute -right-24 top-24 h-72 w-72 bg-lavender-200/50 blur-2xl dark:bg-lavender-300/5" />
+
+  <div class="relative mx-auto max-w-4xl px-5 sm:px-8">
+    <SectionHeading
+      emoji="💼"
+      eyebrow="Experience"
+      title="Where I've worked"
+      subtitle="A look at my journey so far — most recent first."
+    />
+
+    <div class="relative mt-16 pl-8 sm:pl-10">
+      <!-- Vertical timeline line -->
+      <span
+        aria-hidden="true"
+        class="absolute left-2 top-2 bottom-2 w-1.5 rounded-full bg-gradient-to-b from-coral-400 via-lavender-300 to-mint-300 sm:left-3"
+      />
+
+      {
+        experience.map((job, i) => (
+          <div class="reveal relative mb-10 last:mb-0" style={`--reveal-delay: ${i * 120}ms`}>
+            <!-- timeline dot -->
+            <span
+              aria-hidden="true"
+              class={`absolute -left-[31px] top-7 grid h-5 w-5 place-items-center rounded-full ring-4 ring-cream dark:ring-plum-950 sm:-left-[37px] sm:h-6 sm:w-6 ${
+                job.current ? 'bg-coral-500' : 'bg-lavender-400'
+              }`}
+            >
+              {job.current && <span class="absolute h-2.5 w-2.5 animate-ping rounded-full bg-coral-400/70" />}
+            </span>
+
+            <article
+              class="rounded-4xl border border-white/70 bg-white/70 p-6 shadow-soft backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lift dark:border-plum-800 dark:bg-plum-900/60 sm:p-8"
+            >
+              <div class="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h3 class="font-display text-xl font-bold text-plum dark:text-cream sm:text-2xl">
+                    {job.role}
+                  </h3>
+                  <p class="mt-1 font-semibold text-violet-600 dark:text-lavender-300">
+                    {job.company} · {job.location}
+                  </p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                  {job.current && (
+                    <span class="inline-flex items-center gap-1.5 rounded-full bg-mint-100 px-3 py-1 text-xs font-bold text-[#2FA27E] dark:bg-mint-300/15 dark:text-[#7DDCB5]">
+                      <span class="h-2 w-2 animate-pulse rounded-full bg-current" aria-hidden="true" />
+                      Present
+                    </span>
+                  )}
+                  <span class="rounded-full bg-blush-100 px-3 py-1 text-xs font-bold text-coral-600 dark:bg-blush-300/15 dark:text-blush-300">
+                    {job.period}
+                  </span>
+                </div>
+              </div>
+
+              <ul class="mt-5 space-y-2.5">
+                {
+                  job.bullets.map((bullet) => (
+                    <li class="flex items-start gap-2.5 text-sm leading-relaxed text-plum-soft dark:text-lavender-100/80 sm:text-base">
+                      <span aria-hidden="true" class="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-coral-400" />
+                      <span>{bullet}</span>
+                    </li>
+                  ))
+                }
+              </ul>
+            </article>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>
