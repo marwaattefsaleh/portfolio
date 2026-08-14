@@ -1,0 +1,64 @@
+---
+title: "Architecting SwiftUI Apps That Survive Your First Year"
+description: "Scaling SwiftUI beyond a prototype means drawing boundaries early. Here's how I structure views, models, and state so the app grows without the pain."
+pubDate: 2026-08-01
+updatedDate: 2026-08-10
+tags: ["SwiftUI", "Architecture", "MVVM"]
+emoji: 🏗️
+---
+
+SwiftUI makes the first demo feel magical. The scary part is month nine, when that magic starts to cost you time. Most growing pains in SwiftUI come from the same place: views that know too much.
+
+In this post I want to share the small rules I've been applying at Enozom that keep large SwiftUI codebases boring, predictable, and fun to change.
+
+## Draw the boundaries early
+
+The single biggest win is deciding *before writing any code* what your layers are. I reach for a simple shape:
+
+- **View layer** — renders state, forwards user intent.
+- **Model layer** — plain value types with no SwiftUI imports.
+- **Service layer** — networking, persistence, push.
+- **View model / state container** — bridges the two.
+
+The rule that matters more than any diagram: **models must not import SwiftUI.** Once a struct depends on `@Published` or `@State`, it stops being a plain model and starts coupling your business logic to the UI framework.
+
+> A model you can test without a simulator is a model that will outlive your enthusiasm for a rewrite.
+
+## Keep state close to where it's rendered
+
+`@State` is perfect for ephemeral UI state — a search field, an open sheet. The moment two views need the same state, that's your signal to lift it or introduce a shared store.
+
+I use `@Observable` (iOS 17+) for shared app state and keep the store as dumb as possible: expose the data, expose small, well-named mutations, and let views decide how to present it.
+
+## A tiny example
+
+Here's the shape I tend to start with for a screen:
+
+```swift
+@MainActor
+@Observable
+final class OrdersViewModel {
+    private(set) var orders: [Order] = []
+    var isLoading = false
+
+    func load() async {
+        isLoading = true
+        defer { isLoading = false }
+        orders = await orderService.fetchOrders()
+    }
+}
+```
+
+The view holds the store, reads it, and forwards actions. Nothing clever. That's the point — clever code is hard to hand over to someone else in six months.
+
+## What I stop worrying about
+
+Once the boundaries are in place, a few things stop being scary:
+
+1. **Refactoring a screen** — views are small and swappable.
+2. **Testing** — services get mocked, stores get unit-tested in isolation.
+3. **Onboarding a junior dev** — new people can find where things live by following the layer names.
+
+Architecture isn't about being fancy. It's about being kind to your future self — and to whoever maintains your app after you.
+
+Happy building ✨

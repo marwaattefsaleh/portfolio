@@ -2,13 +2,18 @@ import { useEffect, useMemo, useState } from 'react';
 import { Menu, Moon, Sun, X } from 'lucide-react';
 import { site } from '../data/content';
 
+// Root-relative URLs (base is `/portfolio/`). Section links point at the home
+// page so they work from blog routes too.
+const base = import.meta.env.BASE_URL;
+
 const links = [
-  { label: 'Home', href: '#home' },
-  { label: 'About', href: '#about' },
-  { label: 'Experience', href: '#experience' },
-  { label: 'Projects', href: '#projects' },
-  { label: 'Skills', href: '#skills' },
-  { label: 'Contact', href: '#contact' },
+  { label: 'Home', id: 'home', href: `${base}#home` },
+  { label: 'About', id: 'about', href: `${base}#about` },
+  { label: 'Experience', id: 'experience', href: `${base}#experience` },
+  { label: 'Projects', id: 'projects', href: `${base}#projects` },
+  { label: 'Skills', id: 'skills', href: `${base}#skills` },
+  { label: 'Blog', id: 'blogs', href: `${base}blogs/` },
+  { label: 'Contact', id: 'contact', href: `${base}#contact` },
 ];
 
 export default function Navbar() {
@@ -77,7 +82,7 @@ export default function Navbar() {
             href={link.href}
             onClick={() => setDrawerOpen(false)}
             className={`block rounded-xl px-4 py-3 text-lg font-semibold transition-colors ${
-              activeId === link.href.slice(1)
+              activeId === link.id
                 ? 'bg-blush-100 text-coral-600 dark:bg-blush-300/20 dark:text-blush-300'
                 : 'text-plum-soft hover:bg-lavender-100 dark:text-lavender-100 dark:hover:bg-plum-800'
             }`}
@@ -98,7 +103,7 @@ export default function Navbar() {
         >
           {/* Logo */}
           <a
-            href="#home"
+            href={base}
             className="group flex items-center gap-2 font-display text-2xl font-bold text-plum dark:text-cream"
           >
             <span
@@ -117,7 +122,7 @@ export default function Navbar() {
                 <a
                   href={link.href}
                   className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
-                    activeId === link.href.slice(1)
+                    activeId === link.id
                       ? 'bg-blush-100 text-coral-600 dark:bg-blush-300/20 dark:text-blush-300'
                       : 'text-plum-soft hover:bg-lavender-100 hover:text-violet-600 dark:text-lavender-100/90 dark:hover:bg-plum-800 dark:hover:text-cream'
                   }`}
@@ -141,7 +146,7 @@ export default function Navbar() {
 
             {/* Desktop CTA */}
             <a
-              href="#contact"
+              href={`${base}#contact`}
               className="hidden rounded-full bg-coral-500 px-5 py-2.5 text-sm font-bold text-white shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:bg-coral-600 hover:shadow-glow lg:inline-flex"
             >
               Let&apos;s Talk
@@ -184,7 +189,7 @@ export default function Navbar() {
         >
           {drawerLinks}
           <a
-            href="#contact"
+            href={`${base}#contact`}
             onClick={() => setDrawerOpen(false)}
             className="rounded-full bg-coral-500 px-5 py-3 text-center text-sm font-bold text-white shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:bg-coral-600"
           >
@@ -201,10 +206,14 @@ export default function Navbar() {
 
 /** Tiny scrollspy: highlights the nav link matching the section in view. */
 function useActiveSection() {
-  const [activeId, setActiveId] = useState('home');
+  const [activeId, setActiveId] = useState(() =>
+    typeof window !== 'undefined' && window.location.pathname.includes('/blogs/')
+      ? 'blogs'
+      : 'home'
+  );
 
   useEffect(() => {
-    const ids = links.map((l) => l.href.slice(1));
+    const ids = links.map((l) => l.id);
     const sections = ids
       .map((id) => document.getElementById(id))
       .filter((el): el is HTMLElement => el !== null);

@@ -82,6 +82,82 @@ body {
 }
 
 /* ---------------------------------------------------------------------------
+   Blog post typography (.prose-blog) — matches the portfolio palette
+   Used by src/pages/blogs/[slug].astro around the rendered MDX content.
+--------------------------------------------------------------------------- */
+.prose-blog {
+  @apply text-base leading-relaxed text-plum-soft dark:text-lavender-100/85 sm:text-lg;
+}
+
+.prose-blog :where(h1, h2, h3, h4) {
+  @apply scroll-mt-24 font-display font-bold text-plum dark:text-cream;
+}
+.prose-blog :where(h1) {
+  @apply text-3xl sm:text-4xl;
+}
+.prose-blog :where(h2) {
+  @apply mt-12 mb-4 text-2xl sm:text-3xl;
+}
+.prose-blog :where(h3) {
+  @apply mt-8 mb-3 text-xl sm:text-2xl;
+}
+.prose-blog :where(h4) {
+  @apply mt-6 mb-2 text-lg;
+}
+.prose-blog :where(p, ul, ol, pre, table) {
+  @apply mt-5;
+}
+.prose-blog > :first-child {
+  @apply mt-0;
+}
+.prose-blog :where(a) {
+  @apply font-semibold text-coral-500 underline decoration-coral-400 underline-offset-4 transition-colors hover:text-coral-600 dark:text-coral-400 dark:decoration-coral-500/40 dark:hover:text-coral-400;
+}
+.prose-blog :where(strong) {
+  @apply font-bold text-plum dark:text-cream;
+}
+.prose-blog :where(ul) {
+  @apply list-none space-y-2.5;
+}
+.prose-blog :where(ul > li) {
+  @apply relative pl-7;
+}
+.prose-blog :where(ul > li)::before {
+  content: '';
+  @apply absolute left-0 top-[0.55em] h-2 w-2 rounded-full bg-coral-400;
+}
+.prose-blog :where(ol) {
+  @apply list-decimal space-y-2.5 pl-6 marker:font-bold marker:text-coral-400;
+}
+.prose-blog :where(blockquote) {
+  @apply my-6 rounded-2xl border-l-4 border-mint-300 bg-mint-50 px-5 py-4 italic text-plum-soft dark:border-mint-300/40 dark:bg-plum-800/40 dark:text-lavender-100/85;
+}
+.prose-blog :where(code) {
+  @apply rounded-lg bg-lavender-100 px-1.5 py-0.5 font-mono text-[0.85em] font-semibold text-violet-600 dark:bg-plum-800 dark:text-lavender-300;
+}
+.prose-blog :where(pre) {
+  @apply my-6 overflow-x-auto rounded-3xl bg-plum-900 p-5 text-sm leading-relaxed shadow-soft dark:bg-plum-950;
+}
+.prose-blog :where(pre code) {
+  @apply rounded-none bg-transparent p-0 font-mono text-[0.9em] font-semibold text-cream dark:text-lavender-100;
+}
+.prose-blog :where(hr) {
+  @apply my-10 border-lavender-200 dark:border-plum-800;
+}
+.prose-blog :where(img) {
+  @apply my-6 rounded-4xl shadow-soft;
+}
+.prose-blog :where(table) {
+  @apply w-full text-left text-sm;
+}
+.prose-blog :where(th) {
+  @apply border-b-2 border-lavender-300 px-4 py-2 font-display font-bold text-plum dark:border-plum-800 dark:text-cream;
+}
+.prose-blog :where(td) {
+  @apply border-b border-lavender-200 px-4 py-2 align-top dark:border-plum-800;
+}
+
+/* ---------------------------------------------------------------------------
    Reduced motion — disable decorative animation & reveal transforms
 --------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
