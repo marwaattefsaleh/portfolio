@@ -40,7 +40,7 @@ const nextPost = index >= 0 ? allPosts[index + 1] : undefined;
   title={`${post.data.title} — ${site.name}`}
   description={post.data.description}
 >
-  <Navbar client:load />
+  <Navbar client:load pathname={Astro.url.pathname} />
   <main class="relative overflow-hidden bg-gradient-to-b from-cream via-lavender-50 to-cream dark:from-plum-950 dark:via-plum-900/40 dark:to-plum-950">
     <!-- blob decoration -->
     <div aria-hidden="true" class="blob-alt absolute -right-24 top-24 h-80 w-80 bg-blush-100/70 blur-2xl dark:bg-blush-300/5" />

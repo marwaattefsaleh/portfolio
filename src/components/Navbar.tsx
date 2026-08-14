@@ -16,7 +16,7 @@ const links = [
   { label: 'Contact', id: 'contact', href: `${base}#contact` },
 ];
 
-export default function Navbar() {
+export default function Navbar({ pathname }: { pathname?: string }) {
   const [scrolled, setScrolled] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [dark, setDark] = useState<boolean>(() =>
@@ -25,7 +25,7 @@ export default function Navbar() {
       : false
   );
 
-  const activeId = useActiveSection();
+  const activeId = useActiveSection(pathname);
 
   // Solid/blurred background once the page is scrolled
   useEffect(() => {
@@ -205,14 +205,20 @@ export default function Navbar() {
 }
 
 /** Tiny scrollspy: highlights the nav link matching the section in view. */
-function useActiveSection() {
-  const [activeId, setActiveId] = useState(() =>
-    typeof window !== 'undefined' && window.location.pathname.includes('/blogs/')
-      ? 'blogs'
-      : 'home'
-  );
+function useActiveSection(propPathname?: string) {
+  const isBlogRoute =
+    (typeof window !== 'undefined' && window.location.pathname.includes('/blogs/')) ||
+    (typeof propPathname === 'string' && propPathname.includes('/blogs/'));
+
+  const [activeId, setActiveId] = useState(() => (isBlogRoute ? 'blogs' : 'home'));
 
   useEffect(() => {
+    // On blog routes the section scrollspy doesn't apply — keep Blog highlighted.
+    if (window.location.pathname.includes('/blogs/')) {
+      setActiveId('blogs');
+      return;
+    }
+
     const ids = links.map((l) => l.id);
     const sections = ids
       .map((id) => document.getElementById(id))

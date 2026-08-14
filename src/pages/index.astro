@@ -12,7 +12,7 @@ import Footer from '../components/Footer.astro';
 ---
 
 <Layout>
-  <Navbar client:load />
+  <Navbar client:load pathname={Astro.url.pathname} />
   <main>
     <Hero client:load />
     <About />

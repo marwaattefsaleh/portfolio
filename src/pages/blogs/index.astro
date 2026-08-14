@@ -33,7 +33,7 @@ const accents = [
   title={`Blog — ${site.name}`}
   description="Notes on Swift, SwiftUI, architecture, and mentoring — written by Marwa Attef."
 >
-  <Navbar client:load />
+  <Navbar client:load pathname={Astro.url.pathname} />
   <main>
     <section class="relative overflow-hidden bg-gradient-to-b from-cream via-lavender-50 to-cream pt-32 pb-20 dark:from-plum-950 dark:via-plum-900/40 dark:to-plum-950 sm:pt-40 sm:pb-28">
       <!-- blob decoration -->
