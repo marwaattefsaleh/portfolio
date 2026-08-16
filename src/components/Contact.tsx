@@ -6,8 +6,8 @@ import { GithubIcon, LinkedinIcon } from './BrandIcons';
 const contactItems = [
   { label: 'Email', value: site.email, href: `mailto:${site.email}`, Icon: Mail },
   { label: 'Phone', value: site.phone, href: `tel:${site.phoneHref}`, Icon: Phone },
-  { label: 'LinkedIn', value: 'linkedin.com/in/marwa-attef', href: site.linkedin, Icon: LinkedinIcon },
-  { label: 'GitHub', value: 'github.com/marwa-attef', href: site.github, Icon: GithubIcon },
+  { label: 'LinkedIn', value: 'linkedin.com/in/marwa-attef-0a6297146', href: site.linkedin, Icon: LinkedinIcon },
+  { label: 'GitHub', value: 'github.com/marwaattefsaleh', href: site.github, Icon: GithubIcon },
 ];
 
 export default function Contact() {

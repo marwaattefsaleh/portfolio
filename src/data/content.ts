@@ -37,7 +37,7 @@ export const site = {
   headline: 'Senior iOS Engineer',
   // TODO: Replace these placeholders with Marwa's real profile URLs.
   linkedin: 'https://www.linkedin.com/in/marwa-attef-0a6297146/',
-  github: 'https://github.com/marwa-attef',
+  github: 'https://github.com/marwaattefsaleh',
   email: 'marwa.attef.saleh@gmail.com',
   phone: '+20 112 331 4004',
   phoneHref: '+201123314004',
