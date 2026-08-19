@@ -68,7 +68,7 @@ export const aboutParagraphs = [
 
 export const stats = [
   { value: '7+', label: 'Years of Experience' },
-  { value: '18', label: 'Shipped Apps' },
+  { value: '18+', label: 'Shipped Apps' },
   { value: 'MVVM & VIPER', label: 'Proven Architectures' },
   { value: 'Mentor', label: 'to Junior Devs' },
 ];
