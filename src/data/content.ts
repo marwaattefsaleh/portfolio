@@ -8,6 +8,7 @@ export interface Project {
   tagline: string;
   highlights: string[];
   tags: string[];
+  url?: string;
 }
 
 export interface ExperienceItem {
@@ -101,35 +102,65 @@ export const experience: ExperienceItem[] = [
 
 export const projects: Project[] = [
   {
-    name: 'Insta+',
-    tagline: 'A secure, real-time payment confirmation app',
-    tags: ['Swift', 'MVVM', 'Socket.IO', 'Cryptography', 'App Store'],
+    name: 'Couryah',
+    tagline: 'Multi-vertical on-demand e-commerce platform',
+    tags: ['SwiftUI', 'E-commerce', 'Multi-Vendor', 'Web & Mobile'],
+    url: 'https://enozom.com/our_work/couryah/',
     highlights: [
-      'Built from scratch with a scalable MVVM architecture.',
-      'End-to-end encrypted data transmission via asymmetric cryptography.',
-      'Share Extension for app-to-app payment confirmations.',
-      'Real-time OTP verification via Socket.IO.',
-      'Launched on the App Store meeting Apple\'s compliance standards.',
+      'On-demand platform for food, groceries, medicine, and gifts.',
+      'Home delivery and in-store pickup from multiple vendors.',
+      'Actively mentored a junior developer on this codebase.',
     ],
   },
   {
-    name: 'Empolis Service Express',
-    tagline: 'Modernizing a legacy field-service app',
-    tags: ['Swift', 'MVVM', 'SiriKit', 'GenAI', 'Widgets'],
+    name: 'Friday',
+    tagline: 'Farmhouse booking platform',
+    tags: ['SwiftUI', 'Booking', 'Dual-App Ecosystem', 'Web & Mobile'],
+    url: 'https://enozom.com/Our_Work/friday/',
     highlights: [
-      'Refactored from Objective-C to Swift.',
-      'MVVM + modularization via a shared framework.',
-      'SiriKit voice-command integration.',
-      'GenAI-powered intelligent responses and recommendations.',
-      'Home-screen widget for quick access.',
+      'Customer-facing booking app plus partner app for farm owners.',
+      'Property listing and reservation management for farm owners.',
+      'Actively mentored a junior developer on this dual-app ecosystem.',
+    ],
+  },
+  {
+    name: 'Yalla Catering',
+    tagline: 'Corporate catering marketplace in Saudi Arabia',
+    tags: ['SwiftUI', 'Marketplace', 'Catering', 'App Store'],
+    url: 'https://apps.apple.com/ae/app/yalla-catering/id1564072471',
+    highlights: [
+      'Connects users with corporate catering and meal prep providers.',
+      'Event planner integration for large-scale catering orders.',
+      'Mentored junior engineers.',
+    ],
+  },
+  {
+    name: 'Airvoy',
+    tagline: 'Peer-to-peer package transportation and logistics',
+    tags: ['SwiftUI', 'Logistics', 'P2P', 'QR Code'],
+    highlights: [
+      'Connects travelers with packages for cross-border delivery.',
+      'Dynamic document and ticket uploads with weight verification.',
+      'Airport checkpoint location alerts and secure QR-code handshakes.',
+    ],
+  },
+  {
+    name: 'Muri',
+    tagline: 'Transportation platform for employee and student commutes',
+    tags: ['SwiftUI', 'Transportation', 'Dual-App', 'Saudi Arabia'],
+    url: 'https://muri.sa/landing#downloadapp',
+    highlights: [
+      'Passenger and driver apps for optimized daily routes.',
+      'Secure, cost-effective commute solutions in Saudi Arabia.',
+      'Highly tailored mobile interfaces for both user types.',
     ],
   },
   {
     name: 'Day Off',
-    tagline: 'A leave management platform for teams',
-    tags: ['Swift', 'VIPER', 'Push Notifications'],
+    tagline: 'Employee PTO and leave tracker',
+    tags: ['Swift', 'VIPER', 'Push Notifications', 'App Store'],
+    url: 'https://enozom.com/Our_Work/Day-Off-Leave-Tracker/',
     highlights: [
-      'VIPER architecture for modularity and scalability.',
       'Multi-level approval workflows.',
       'Customizable leave policies, accrual and carry-over rules.',
       'Dynamic company-wide calendar view.',
@@ -137,34 +168,132 @@ export const projects: Project[] = [
     ],
   },
   {
-    name: 'Mjlsi',
-    tagline: 'Secure digital meetings and approvals',
-    tags: ['Swift', 'Socket.IO', 'Zoom SDK', 'Cryptography'],
+    name: 'Texas Chicken',
+    tagline: 'Fast-food ordering and delivery app',
+    tags: ['SwiftUI', 'MVVM', 'Apple Pay', 'Deep Linking'],
+    url: 'https://apps.apple.com/eg/app/texas-chicken/id1438764129',
     highlights: [
-      'Digital signatures via custom cryptographic libraries.',
-      'Real-time presentation sharing via Socket.IO.',
-      'Structured meeting-approval workflow.',
+      'End-to-end ordering for dine-in, takeaway, drive-thru, and delivery.',
+      'Contactless payment integrations and localized restaurant discovery.',
+      'Dynamic coupon and rewards management with favorite-order profiles.',
+    ],
+  },
+  {
+    name: 'Zad',
+    tagline: 'Food delivery platform with restaurant discovery',
+    tags: ['Swift', 'MVVM', 'Delivery', 'Real-time Tracking'],
+    highlights: [
+      'Restaurant discovery, online ordering, and delivery tracking.',
+      'Led iOS feature development and contributed to architecture.',
+      'Improved app performance and mentored mid-level engineers.',
+    ],
+  },
+  {
+    name: 'Tilawati',
+    tagline: 'Delivery and restaurant application management',
+    tags: ['Swift', 'Restaurant', 'Delivery'],
+    highlights: [
+      'High-reliability delivery and restaurant management platform.',
+      'Mentored junior team members on best practices.',
+    ],
+  },
+  {
+    name: 'Masterz',
+    tagline: 'Peer-to-peer educational platform',
+    tags: ['SwiftUI', 'Cross-Platform', 'Education', 'Dual-Role'],
+    url: 'https://enozom.com/Our_Work/Masterz/',
+    highlights: [
+      'Connects instructors ("Masters") and students across domains.',
+      'Supports dual user states: student and multi-subject instructor.',
+      'Handled dual-platform implementation across iOS and Android.',
+    ],
+  },
+  {
+    name: 'Arab Art Sale',
+    tagline: 'Global e-commerce marketplace for artists',
+    tags: ['SwiftUI', 'E-commerce', 'Gallery', 'Cross-Platform'],
+    url: 'https://enozom.com/Our_Work/arab-art-sale/',
+    highlights: [
+      'Showcase, curate, and monetize artwork globally.',
+      'Robust digital catalog rendering and transaction mechanics.',
+      'Handled dual-platform implementation across iOS and Android.',
+    ],
+  },
+  {
+    name: 'Mjlsi',
+    tagline: 'Board meeting governance and management system',
+    tags: ['Swift', 'Socket.IO', 'Zoom SDK', 'Cryptography'],
+    url: 'https://apps.apple.com/ae/app/mjlsi/id1494153877',
+    highlights: [
+      'Full meeting lifecycle: agendas, presentations, voting, and minutes.',
+      'Secure digital signatures via custom cryptographic libraries.',
       'Embedded Zoom SDK for in-app video conferencing.',
     ],
   },
   {
-    name: 'Mhammi',
-    tagline: 'Task management, built for teams',
-    tags: ['Swift', 'VIPER', 'Collaboration'],
+    name: 'Empolis',
+    tagline: 'Enterprise knowledge intelligence suite',
+    tags: ['Swift', 'GenAI', 'Offline Sync', 'QR Scanner'],
+    url: 'https://apps.apple.com/us/app/empolis-industrial-knowledge/id1376571362',
     highlights: [
-      'Built from the ground up with VIPER architecture.',
-      'Collaborative task assignment and tracking.',
-      'Real-time dashboard for team transparency.',
+      'GDPR-compliant multi-source data centralization.',
+      'Offline sync, voice-to-text, and AI digital assistant (Empolis Buddy).',
+      'QR code scanner for contextual machine diagnostics.',
     ],
   },
   {
-    name: 'Texas Chicken',
-    tagline: 'A modern SwiftUI ordering experience',
-    tags: ['SwiftUI', 'MVVM', 'Apple Pay', 'Deep Linking'],
+    name: 'Arabsat',
+    tagline: 'Telecommunications utility platform',
+    tags: ['Swift', 'Real-time Telemetry', 'Satellite'],
+    url: 'https://www.arabsat.com/',
     highlights: [
-      'Built with SwiftUI + MVVM.',
-      'Apple Pay integration for seamless transactions.',
-      'Deep linking for improved navigation and engagement.',
+      'Satellite asset databases and channel frequency configurations.',
+      'Signal coverage calculators and device sensor calibration.',
+      'Precise satellite dish alignment workflows.',
+    ],
+  },
+  {
+    name: 'Insta+',
+    tagline: 'Secure fintech payment confirmation app',
+    tags: ['Swift', 'MVVM', 'Cryptography', 'Share Extension'],
+    url: 'https://apps.apple.com/eg/app/insta/id6502846983',
+    highlights: [
+      'iOS System Share Extension for instant app-to-app routing.',
+      'Real-time transaction confirmation pipelines.',
+      'Cryptographic OTP verification for multi-factor security.',
+    ],
+  },
+  {
+    name: 'Mhmmi',
+    tagline: 'Enterprise team collaboration and task management',
+    tags: ['Swift', 'VIPER', 'Collaboration', 'Kanban'],
+    url: 'https://apps.apple.com/ae/app/%D9%85%D9%87%D8%A7%D9%85%D9%8A/id1503704937',
+    highlights: [
+      'Dynamic kanban workflow boards with real-time in-app chat.',
+      'Collaborative file-sharing across team members.',
+      'Built and deployed entirely from scratch to store release.',
+    ],
+  },
+  {
+    name: 'Mal3abak',
+    tagline: 'Sports facility marketplace for instant booking',
+    tags: ['SwiftUI', 'Marketplace', 'Map', 'Cross-Platform'],
+    url: 'https://enozom.com/Our_Work/mal3abak/',
+    highlights: [
+      'Connects players with nearby football fields for instant booking.',
+      'Localized discovery map features and real-time scheduling.',
+      'Contributed to both iOS and Android codebases.',
+    ],
+  },
+  {
+    name: 'Ship Hub',
+    tagline: 'Global B2B maritime logistics network',
+    tags: ['SwiftUI', 'Logistics', 'B2B', 'Cross-Platform'],
+    url: 'https://enozom.com/Our_Work/shiphub/',
+    highlights: [
+      'Digitizes marine business processes for ship owners and managers.',
+      'Connects port agencies and technical service providers globally.',
+      'Contributed to both iOS and Android codebases.',
     ],
   },
 ];

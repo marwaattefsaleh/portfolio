@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, ExternalLink } from 'lucide-react';
 import { projects, type Project } from '../data/content';
 
 // Per-card accent gradients (cycled through by index)
@@ -13,7 +13,7 @@ const accents = [
   'from-blush-200 to-lavender-400/80',
 ];
 
-const emojis = ['💳', '🔧', '🗓️', '🛡️', '✅', '🍔'];
+const emojis = ['🛒', '🏡', '🍽️', '✈️', '🚗', '🗓️', '🍗', '🛵', '📦', '🎓', '🎨', '📋', '🏭', '📡', '💳', '💬', '⚽', '🚢'];
 
 export default function Projects() {
   return (
@@ -36,7 +36,7 @@ export default function Projects() {
             Things I&apos;ve built
           </h2>
           <p className="mt-3 text-base leading-relaxed text-plum-soft dark:text-lavender-100/75 sm:text-lg">
-            Tap a card to peek behind the curtain — tap &quot;Highlights&quot; to expand.
+            A selection of apps I&apos;ve shipped — tap a card for highlights.
           </p>
         </div>
 
@@ -70,12 +70,27 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
         <span aria-hidden="true">{emoji}</span>
       </div>
 
-      <h3 className="font-display text-xl font-bold text-plum dark:text-cream">
-        {project.name}
-      </h3>
-      <p className="mt-1 text-sm font-medium text-plum-soft dark:text-lavender-100/75">
-        {project.tagline}
-      </p>
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <h3 className="font-display text-xl font-bold text-plum dark:text-cream">
+            {project.name}
+          </h3>
+          <p className="mt-1 text-sm font-medium text-plum-soft dark:text-lavender-100/75">
+            {project.tagline}
+          </p>
+        </div>
+        {project.url && (
+          <a
+            href={project.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`View ${project.name} on GitHub`}
+            className="mt-1 shrink-0 rounded-lg p-1.5 text-plum-soft/50 transition-colors hover:bg-lavender-100 hover:text-coral-500 dark:text-lavender-100/40 dark:hover:bg-plum-800 dark:hover:text-coral-400"
+          >
+            <ExternalLink size={16} />
+          </a>
+        )}
+      </div>
 
       {/* Tech badges */}
       <div className="mt-4 flex flex-wrap gap-1.5">
