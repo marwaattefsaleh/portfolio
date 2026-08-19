@@ -190,11 +190,14 @@ export const projects: Project[] = [
   },
   {
     name: 'Tilawati',
-    tagline: 'Delivery and restaurant application management',
-    tags: ['Swift', 'Restaurant', 'Delivery'],
+    tagline: 'Quran memorization and recitation platform',
+    tags: ['Swift', 'Audio Recording', 'Subscription', 'Sheikh Review'],
     highlights: [
-      'High-reliability delivery and restaurant management platform.',
-      'Mentored junior team members on best practices.',
+      'Subscription-based Quran memorization connecting students with Sheikhs.',
+      'Student experience: play verses, record recitation, submit for review.',
+      'Sheikh experience: listen to submissions, annotate verses for correction.',
+      'Interactive verse-level feedback to improve memorization and recitation.',
+      'Supported subscription-based access to Sheikh-led services.',
     ],
   },
   {

@@ -13,7 +13,7 @@ const accents = [
   'from-blush-200 to-lavender-400/80',
 ];
 
-const emojis = ['🛒', '🏡', '🍽️', '✈️', '🚗', '🗓️', '🍗', '🛵', '📦', '🎓', '🎨', '📋', '🏭', '📡', '💳', '💬', '⚽', '🚢'];
+const emojis = ['🛒', '🏡', '🍽️', '✈️', '🚗', '🗓️', '🍗', '🛵', '📖', '🎓', '🎨', '📋', '🏭', '📡', '💳', '💬', '⚽', '🚢'];
 
 export default function Projects() {
   return (
