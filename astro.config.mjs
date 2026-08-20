@@ -2,6 +2,7 @@
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 import mdx from '@astrojs/mdx';
+import sitemap from '@astrojs/sitemap';
 import { unified } from '@astrojs/markdown-remark';
 
 /** Lazy-loads and async-decodes every markdown image (hast plugin). */
@@ -21,7 +22,7 @@ function rehypeLazyImages() {
 
 // https://astro.build/config
 export default defineConfig({
-  integrations: [react(), mdx()],
+  integrations: [react(), mdx(), sitemap()],
   markdown: { processor: unified({ rehypePlugins: [rehypeLazyImages] }) },
   output: 'static',
   site: 'https://marwaattefsaleh.github.io',
