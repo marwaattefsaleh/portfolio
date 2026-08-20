@@ -61,9 +61,17 @@ export const roles = [
 ];
 
 export const aboutParagraphs = [
-  `Hi there! I'm Marwa — a mobile developer with ${`7+`} years of experience, and I've spent most of that time in love with native iOS. I specialize in Swift and SwiftUI, and I care deeply about building apps that feel effortless to use and are a joy to maintain.`,
-  `Right now I work as a Senior iOS Developer at Enozom in Alexandria, Egypt, where I've been since February 2020. Before that, I built iOS and Android apps there too. I'm a big believer in solid architecture — MVVM, VIPER, clean modularization — because great structure is what lets a team move fast without breaking things. I also love mentoring junior developers and watching them grow into confident engineers.`,
-  `When I'm not writing Swift, I'm probably mentoring someone through their first pull request, sketching out a new idea, or enjoying a cup of coffee ☕✨`,
+  `I'm Marwa, a Senior iOS Developer with 7+ years of professional experience building scalable, reliable, and high-quality mobile applications. I specialize in Swift and SwiftUI, with a strong focus on modern iOS development, software architecture, performance, and delivering polished user experiences.`,
+
+  `Throughout my career, I've contributed to mobile products across different industries and business domains, working across the full development lifecycle — from technical analysis and architecture to implementation, testing, deployment, and continuous improvement. I enjoy solving complex engineering challenges and turning product requirements into maintainable, production-ready solutions.`,
+
+  `My technical expertise includes Swift, SwiftUI, UIKit, Swift Concurrency, Combine, Core Data, SwiftData, networking, dependency injection, modular architecture, and automated testing. I have worked extensively with architectural approaches such as MVVM, VIPER, and Clean Architecture, applying them pragmatically to create codebases that are scalable, testable, and easy to evolve.`,
+
+  `I also have experience with engineering practices and tooling that support reliable software delivery, including CI/CD, code quality automation, crash monitoring, analytics, source control, and release management. I value strong engineering standards and believe that maintainability, observability, and automation are essential for building software that performs well in production.`,
+
+  `Beyond individual development, I enjoy contributing to technical decision-making, code reviews, knowledge sharing, and mentoring. I believe effective engineering is not only about writing code, but also about creating clear technical direction, communicating effectively, and helping teams build sustainable solutions together.`,
+
+  `I'm continuously exploring new technologies and development practices to stay current with the evolving Apple ecosystem. I'm particularly interested in modern Swift, concurrency, scalable architectures, developer productivity, and building products that balance technical quality with real user and business needs.`,
 ];
 
 export const stats = [

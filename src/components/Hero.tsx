@@ -7,7 +7,7 @@ import { GithubIcon, LinkedinIcon } from './BrandIcons';
 
 // Friendly rewrite of the provided bio. Edit freely.
 const heroIntro =
-  "I'm an accomplished Senior iOS Developer with a proven track record at Enozom, delivering innovative applications with Swift and Agile development. I care deeply about great user experience, app performance, and mentoring the next generation of iOS engineers along the way.";
+  "Senior iOS Developer with 7+ years of experience designing and delivering scalable, high-quality iOS applications using Swift and modern Apple technologies. Experienced in building maintainable architectures, optimizing application performance, and developing reliable, user-focused products in collaborative Agile environments. Passionate about clean code, technical excellence, and mentoring engineers to build better software.";
 
 const ROTATE_MS = 2600;
 
